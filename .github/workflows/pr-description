@@ -1,0 +1,37 @@
+name: PR Description
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  set-pr-description:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set PR Description
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const prNumber = context.payload.pull_request.number;
+            // Descrição padrão para o PR
+            const description = `
+### Descrição
+Este PR foi criado com a intenção de ...
+[Card](link aqui)
+
+### Regras de negócio
+- N/A
+
+### Como testar
+- Passo 1
+`;
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              body: description,
+            });
