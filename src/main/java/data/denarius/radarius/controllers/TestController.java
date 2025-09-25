@@ -11,4 +11,9 @@ public class TestController {
     public String test() {
         return "API is working!";
     }
+
+    @GetMapping("/secured")
+    public String securedTest() {
+        return "Secured API is working!";
+    }
 }
