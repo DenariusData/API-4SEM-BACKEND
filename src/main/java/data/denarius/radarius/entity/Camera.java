@@ -14,7 +14,7 @@ public class Camera {
     private Integer cameraId;
 
     @ManyToOne
-    @JoinColumn(name = "via_id")
+    @JoinColumn(name = "road_id")
     private Road road;
 
     private BigDecimal latitude;

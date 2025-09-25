@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "leitura")
+@Table(name = "reading")
 public class Reading {
 
     @Id
@@ -20,7 +20,7 @@ public class Reading {
     private OffsetDateTime timestamp;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_veiculo")
+    @Column(name = "vehicle_type")
     private VehicleTypeEnum vehicleType;
 
     private BigDecimal speed;

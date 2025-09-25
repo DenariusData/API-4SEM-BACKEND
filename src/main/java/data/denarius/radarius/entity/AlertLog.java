@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "log_alerta")
+@Table(name = "alert_log")
 public class AlertLog {
 
     @Id
@@ -12,18 +12,18 @@ public class AlertLog {
     private Integer logId;
 
     @ManyToOne
-    @JoinColumn(name = "alerta_id")
+    @JoinColumn(name = "alert_id")
     private Alert alert;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
     private String channel;
 
     private String event;
 
-    @Column(name = "evento_ts")
+    @Column(name = "event_ts")
     private OffsetDateTime eventTimestamp;
 
     private String status;

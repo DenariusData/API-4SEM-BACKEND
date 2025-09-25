@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "user")
 public class User {
 
     @Id

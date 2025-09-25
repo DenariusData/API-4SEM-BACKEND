@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "via")
+@Table(name = "road")
 public class Road {
 
     @Id
@@ -15,7 +15,7 @@ public class Road {
 
     private String address;
 
-    @Column(name = "velocidade_da_via")
+    @Column(name = "speed_limit")
     private BigDecimal speedLimit;
 
     @Column(name = "created_at")

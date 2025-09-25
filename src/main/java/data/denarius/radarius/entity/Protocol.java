@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "protocolo")
+@Table(name = "protocol")
 public class Protocol {
 
     @Id

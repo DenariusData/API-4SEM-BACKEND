@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "nivel_criterio")
+@Table(name = "criterion_level")
 public class CriterionLevel {
 
     @Id
@@ -12,7 +12,7 @@ public class CriterionLevel {
     private Integer criterionLevelId;
 
     @ManyToOne
-    @JoinColumn(name = "criterio_id")
+    @JoinColumn(name = "criterion_id")
     private Criterion criterion;
 
     private Short level;

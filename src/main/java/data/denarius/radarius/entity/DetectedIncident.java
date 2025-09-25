@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "incidente_detectado")
+@Table(name = "detected_incident")
 public class DetectedIncident {
 
     @Id
@@ -12,11 +12,11 @@ public class DetectedIncident {
     private Integer incidentId;
 
     @ManyToOne
-    @JoinColumn(name = "alerta_id")
+    @JoinColumn(name = "alert_id")
     private Alert alert;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
     private String incidentType;
