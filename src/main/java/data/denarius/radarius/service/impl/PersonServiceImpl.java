@@ -3,7 +3,6 @@ package data.denarius.radarius.service.impl;
 import data.denarius.radarius.entity.Person;
 import data.denarius.radarius.service.PersonService;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import data.denarius.radarius.repository.PersonRepository;
