@@ -22,7 +22,7 @@ public class CriterionLevel {
 
     @ManyToOne
     @JoinColumn(name = "created_by")
-    private User createdBy;
+    private Person createdBy;
 
     public Integer getCriterionLevelId() {
         return criterionLevelId;
@@ -56,11 +56,11 @@ public class CriterionLevel {
         this.createdAt = createdAt;
     }
 
-    public User getCreatedBy() {
+    public Person getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Person createdBy) {
         this.createdBy = createdBy;
     }
 }

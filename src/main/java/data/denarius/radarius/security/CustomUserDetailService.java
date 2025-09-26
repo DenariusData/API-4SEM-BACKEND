@@ -1,8 +1,9 @@
 package data.denarius.radarius.security;
 
-import data.denarius.radarius.entity.User;
-import data.denarius.radarius.service.UserService;
+import data.denarius.radarius.entity.Person;
+import data.denarius.radarius.service.PersonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,16 +12,17 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
-    private final UserService userService;
+    private final PersonService personService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userService.findByEmail(email);
+        Person person = personService.findByEmail(email).orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + email));
         return UserPrincipal
                 .builder()
-                .userId(user.getUserId())
-                .email(user.getEmail())
-                .password(user.getPassword())
+                .userId(person.getUserId())
+                .email(person.getEmail())
+                .password(person.getPassword())
                 .build();
     }
 }
