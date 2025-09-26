@@ -19,7 +19,7 @@ public class Protocol {
 
     @ManyToOne
     @JoinColumn(name = "created_by")
-    private User createdBy;
+    private Person createdBy;
 
     @OneToMany(mappedBy = "protocol")
     private List<Alert> alerts;
@@ -48,11 +48,11 @@ public class Protocol {
         this.createdAt = createdAt;
     }
 
-    public User getCreatedBy() {
+    public Person getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Person createdBy) {
         this.createdBy = createdBy;
     }
 
