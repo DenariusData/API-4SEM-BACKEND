@@ -28,7 +28,7 @@ public class Alert {
 
     @ManyToOne
     @JoinColumn(name = "assigned_to")
-    private User assignedTo;
+    private Person assignedTo;
 
     private String message;
 
@@ -91,11 +91,11 @@ public class Alert {
         this.status = status;
     }
 
-    public User getAssignedTo() {
+    public Person getAssignedTo() {
         return assignedTo;
     }
 
-    public void setAssignedTo(User assignedTo) {
+    public void setAssignedTo(Person assignedTo) {
         this.assignedTo = assignedTo;
     }
 
