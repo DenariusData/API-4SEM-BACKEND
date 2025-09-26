@@ -1,0 +1,17 @@
+[33mceb23af[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mRAD-36/development-of-controllers-repositories-and-services[m[33m, [m[1;31morigin/sprint-1[m[33m, [m[1;31morigin/RAD-36/development-of-controllers-repositories-and-services[m[33m, [m[1;32msprint-1[m[33m, [m[1;32mRAD-36/development-of-controllers-repositories-and-service[m[33m)[m feat: Merge pull request #3 from DenariusData/RAD-35/create-entities
+[33m731eab2[m[33m ([m[1;31morigin/RAD-35/create-entities[m[33m)[m fix: change the language of the table annotations
+[33m1cb10f7[m feat: create Road entity
+[33ma35fc74[m feat: create Reading entity
+[33m6962d50[m feat: create Protocol entity
+[33mff879ba[m feat: create DetectedIncident entity
+[33m70ae8ed[m feat: create CriterionLevel entity
+[33m5906ded[m feat: create Criterion entity
+[33me660721[m feat: create Camera entity
+[33m40f70ba[m feat: create AlertLog entity
+[33m0bc370a[m feat: create Alert entity
+[33m30c8028[m feat: create User entity and enums
+[33md3d2054[m feat: create User entity and enums
+[33me4cf588[m build: Merge pull request #1 from DenariusData/RAD-31/build-setup-back
+[33m7a36837[m[33m ([m[1;31morigin/RAD-31/build-setup-back[m[33m)[m build: add /target to .gitignore
+[33m5b8a0d0[m build: create project initial setup
+[33mc697ded[m[33m ([m[1;31morigin/sprint-3[m[33m, [m[1;31morigin/sprint-2[m[33m)[m Initial commit
