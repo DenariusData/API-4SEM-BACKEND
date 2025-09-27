@@ -17,7 +17,7 @@ public class DetectedIncident {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private Person person;
 
     private String incidentType;
 
@@ -40,12 +40,12 @@ public class DetectedIncident {
         this.alert = alert;
     }
 
-    public User getUser() {
-        return user;
+    public Person getUser() {
+        return person;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(Person person) {
+        this.person = person;
     }
 
     public String getIncidentType() {

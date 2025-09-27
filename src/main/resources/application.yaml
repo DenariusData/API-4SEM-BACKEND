@@ -14,3 +14,7 @@ spring:
 cors:
   allowed-origins: "*"
   allowed-methods: GET,POST,PUT,PATCH,DELETE
+
+security:
+  jwt:
+    secret-key: radarius
