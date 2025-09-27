@@ -1,4 +1,4 @@
-package data.denarius.radarius.repositories;
+package data.denarius.radarius.repository;
 
 import data.denarius.radarius.entity.Alert;
 import org.springframework.data.jpa.repository.JpaRepository;
