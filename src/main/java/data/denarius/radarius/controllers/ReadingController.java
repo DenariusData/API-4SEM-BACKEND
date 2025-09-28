@@ -2,7 +2,7 @@ package data.denarius.radarius.controllers;
 
 import data.denarius.radarius.dto.ReadingRequestDTO;
 import data.denarius.radarius.dto.ReadingResponseDTO;
-import data.denarius.radarius.service.ReadingService;
+import data.denarius.radarius.services.ReadingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

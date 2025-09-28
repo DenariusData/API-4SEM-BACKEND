@@ -2,7 +2,7 @@ package data.denarius.radarius.controllers;
 
 import data.denarius.radarius.dtos.request.AlertRequestDTO;
 import data.denarius.radarius.dto.AlertResponseDTO;
-import data.denarius.radarius.service.AlertService;
+import data.denarius.radarius.services.AlertService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

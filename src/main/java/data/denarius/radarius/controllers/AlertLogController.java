@@ -1,7 +1,7 @@
 package data.denarius.radarius.controllers;
 
 import data.denarius.radarius.entity.AlertLog;
-import data.denarius.radarius.service.AlertLogService;
+import data.denarius.radarius.services.AlertLogService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
