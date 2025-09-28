@@ -32,31 +32,32 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<Alert> findAll() {
-        return alertRepository.findAll();
+    public List<AlertResponseDTO> findAll() {
+        return alertRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public Optional<Alert> findById(Integer id) {
-        return alertRepository.findById(id);
+    public Optional<AlertResponseDTO> findById(Integer id) {
+        return alertRepository.findById(id).map(this::toDTO);
     }
 
     @Override
-    public Alert save(AlertRequestDTO request) {
+    public AlertResponseDTO save(AlertRequestDTO request) {
         Alert alert = new Alert();
         mapRequestToEntity(request, alert);
         alert.setCreatedAt(OffsetDateTime.now());
-        return alertRepository.save(alert);
+        return toDTO(alertRepository.save(alert));
     }
 
     @Override
-    public Alert update(Integer id, AlertRequestDTO request) {
-        return alertRepository.findById(id)
-                .map(existing -> {
-                    mapRequestToEntity(request, existing);
-                    return alertRepository.save(existing);
-                })
+    public AlertResponseDTO update(Integer id, AlertRequestDTO request) {
+        Alert alert = alertRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Alert not found with id " + id));
+        mapRequestToEntity(request, alert);
+        return toDTO(alertRepository.save(alert));
     }
 
     @Override
