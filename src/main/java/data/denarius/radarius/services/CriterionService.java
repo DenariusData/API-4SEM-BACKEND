@@ -1,7 +1,7 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dto.CriterionRequestDTO;
-import data.denarius.radarius.dto.CriterionResponseDTO;
+import data.denarius.radarius.dtos.criterion.CriterionRequestDTO;
+import data.denarius.radarius.dtos.criterion.CriterionResponseDTO;
 
 import java.util.List;
 

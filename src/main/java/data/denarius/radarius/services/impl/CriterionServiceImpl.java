@@ -4,8 +4,8 @@ import data.denarius.radarius.dto.CriterionRequestDTO;
 import data.denarius.radarius.dto.CriterionResponseDTO;
 import data.denarius.radarius.entity.Criterion;
 import data.denarius.radarius.entity.User;
-import data.denarius.radarius.repository.CriterionRepository;
-import data.denarius.radarius.repository.UserRepository;
+import data.denarius.radarius.repositories.CriterionRepository;
+import data.denarius.radarius.repositories.UserRepository;
 import data.denarius.radarius.services.CriterionService;
 import org.springframework.stereotype.Service;
 

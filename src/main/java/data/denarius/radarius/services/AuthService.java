@@ -1,6 +1,6 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dto.login.LoginResponseDTO;
+import data.denarius.radarius.dtos.login.LoginResponseDTO;
 
 import javax.naming.AuthenticationException;
 

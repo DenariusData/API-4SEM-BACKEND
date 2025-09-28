@@ -1,7 +1,7 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dtos.request.AlertRequestDTO;
-import data.denarius.radarius.dto.AlertResponseDTO;
+import data.denarius.radarius.dtos.alert.AlertRequestDTO;
+import data.denarius.radarius.dtos.alert.AlertResponseDTO;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,7 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.dto.RoadRequestDTO;
-import data.denarius.radarius.dto.RoadResponseDTO;
+import data.denarius.radarius.dtos.road.RoadRequestDTO;
+import data.denarius.radarius.dtos.road.RoadResponseDTO;
 import data.radarius.radarius.services.RoadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

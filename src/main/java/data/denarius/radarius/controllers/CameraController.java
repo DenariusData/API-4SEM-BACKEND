@@ -1,7 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.dto.camera.CameraRequestDTO;
-import data.denarius.radarius.dto.camera.CameraResponseDTO;
+import data.denarius.radarius.dtos.camera.CameraRequestDTO;
+import data.denarius.radarius.dtos.camera.CameraResponseDTO;
 import data.denarius.radarius.services.CameraService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

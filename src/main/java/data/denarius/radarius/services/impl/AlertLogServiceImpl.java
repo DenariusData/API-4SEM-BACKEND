@@ -1,8 +1,8 @@
 package data.denarius.radarius.services.impl;
 
 import data.denarius.radarius.entity.AlertLog;
-import data.denarius.radarius.repository.AlertLogRepository;
-import data.denarius.radarius.service.AlertLogService;
+import data.denarius.radarius.repositories.AlertLogRepository;
+import data.denarius.radarius.services.AlertLogService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

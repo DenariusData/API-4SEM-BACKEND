@@ -1,23 +1,14 @@
-package data.denarius.radarius.dto;
+package data.denarius.radarius.dtos.user;
 
 import java.time.OffsetDateTime;
 
-public class UserResponseDTO {
+public class UserRequestDTO {
 
-    private Integer userId;
     private String name;
     private String whatsapp;
     private String email;
     private String role;
     private OffsetDateTime createdAt;
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
 
     public String getName() {
         return name;

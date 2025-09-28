@@ -5,7 +5,7 @@ import data.denarius.radarius.services.PersonService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import data.denarius.radarius.repository.PersonRepository;
+import data.denarius.radarius.repositories.PersonRepository;
 
 import java.util.Optional;
 

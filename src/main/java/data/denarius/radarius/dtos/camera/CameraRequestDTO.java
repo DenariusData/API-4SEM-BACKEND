@@ -1,4 +1,4 @@
-package data.denarius.radarius.dto.camera;
+package data.denarius.radarius.dtos.camera;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

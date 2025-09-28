@@ -1,4 +1,4 @@
-package data.denarius.radarius.dto;
+package data.denarius.radarius.dtos.detectedincident;
 
 import java.time.OffsetDateTime;
 

@@ -4,9 +4,9 @@ import data.denarius.radarius.dto.ProtocolRequestDTO;
 import data.denarius.radarius.dto.ProtocolResponseDTO;
 import data.denarius.radarius.entity.Protocol;
 import data.denarius.radarius.entity.User;
-import data.denarius.radarius.repository.ProtocolRepository;
-import data.denarius.radarius.repository.UserRepository;
-import data.denarius.radarius.service.ProtocolService;
+import data.denarius.radarius.repositories.ProtocolRepository;
+import data.denarius.radarius.repositories.UserRepository;
+import data.denarius.radarius.services.ProtocolService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

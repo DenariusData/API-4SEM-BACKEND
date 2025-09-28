@@ -1,7 +1,7 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dto.camera.CameraRequestDTO;
-import data.denarius.radarius.dto.camera.CameraResponseDTO;
+import data.denarius.radarius.dtos.camera.CameraRequestDTO;
+import data.denarius.radarius.dtos.camera.CameraResponseDTO;
 
 import java.util.List;
 

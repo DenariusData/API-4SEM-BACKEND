@@ -1,14 +1,14 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.CriterionLevelRequestDTO;
-import data.denarius.radarius.dto.CriterionLevelResponseDTO;
+import data.denarius.radarius.dtos.CriterionLevelRequestDTO;
+import data.denarius.radarius.dtos.CriterionLevelResponseDTO;
 import data.denarius.radarius.entity.Criterion;
 import data.denarius.radarius.entity.CriterionLevel;
 import data.denarius.radarius.entity.User;
-import data.denarius.radarius.repository.CriterionLevelRepository;
-import data.denarius.radarius.repository.CriterionRepository;
-import data.denarius.radarius.repository.UserRepository;
-import data.denarius.radarius.service.CriterionLevelService;
+import data.denarius.radarius.repositories.CriterionLevelRepository;
+import data.denarius.radarius.repositories.CriterionRepository;
+import data.denarius.radarius.repositories.UserRepository;
+import data.denarius.radarius.services.CriterionLevelService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package data.denarius.radarius.repository;
+package data.denarius.radarius.repositories;
 
 import data.denarius.radarius.entity.CriterionLevel;
 import org.springframework.data.jpa.repository.JpaRepository;

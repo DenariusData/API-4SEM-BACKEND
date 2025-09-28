@@ -3,8 +3,8 @@ package data.denarius.radarius.services.impl;
 import data.denarius.radarius.dto.RoadRequestDTO;
 import data.denarius.radarius.dto.RoadResponseDTO;
 import data.denarius.radarius.entity.Road;
-import data.denarius.radarius.repository.RoadRepository;
-import data.denarius.radarius.service.RoadService;
+import data.denarius.radarius.repositories.RoadRepository;
+import data.denarius.radarius.services.RoadService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

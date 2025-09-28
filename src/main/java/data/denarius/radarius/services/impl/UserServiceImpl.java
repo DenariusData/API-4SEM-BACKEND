@@ -4,7 +4,7 @@ import data.denarius.radarius.dto.UserRequestDTO;
 import data.denarius.radarius.dto.UserResponseDTO;
 import data.denarius.radarius.entity.User;
 import data.denarius.radarius.repository.UserRepository;
-import data.denarius.radarius.service.UserService;
+import data.denarius.radarius.services.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

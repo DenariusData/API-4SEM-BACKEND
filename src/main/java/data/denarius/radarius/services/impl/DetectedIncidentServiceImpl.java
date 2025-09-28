@@ -1,14 +1,14 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.DetectedIncidentRequestDTO;
-import data.denarius.radarius.dto.DetectedIncidentResponseDTO;
+import data.denarius.radarius.dtos.DetectedIncidentRequestDTO;
+import data.denarius.radarius.dtos.DetectedIncidentResponseDTO;
 import data.denarius.radarius.entity.Alert;
 import data.denarius.radarius.entity.DetectedIncident;
 import data.denarius.radarius.entity.User;
-import data.denarius.radarius.repository.AlertRepository;
-import data.denarius.radarius.repository.DetectedIncidentRepository;
-import data.denarius.radarius.repository.UserRepository;
-import data.denarius.radarius.service.DetectedIncidentService;
+import data.denarius.radarius.repositories.AlertRepository;
+import data.denarius.radarius.repositories.DetectedIncidentRepository;
+import data.denarius.radarius.repositories.UserRepository;
+import data.denarius.radarius.services.DetectedIncidentService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

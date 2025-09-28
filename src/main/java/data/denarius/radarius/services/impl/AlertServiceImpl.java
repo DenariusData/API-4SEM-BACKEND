@@ -2,8 +2,8 @@ package data.denarius.radarius.services.impl;
 
 import data.denarius.radarius.dtos.request.AlertRequestDTO;
 import data.denarius.radarius.entity.Alert;
-import data.denarius.radarius.repository.*;
-import data.denarius.radarius.service.AlertService;
+import data.denarius.radarius.repositories.*;
+import data.denarius.radarius.services.AlertService;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;

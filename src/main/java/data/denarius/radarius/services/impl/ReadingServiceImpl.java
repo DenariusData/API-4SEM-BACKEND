@@ -4,9 +4,9 @@ import data.denarius.radarius.dto.ReadingRequestDTO;
 import data.denarius.radarius.dto.ReadingResponseDTO;
 import data.denarius.radarius.entity.Camera;
 import data.denarius.radarius.entity.Reading;
-import data.denarius.radarius.repository.CameraRepository;
-import data.denarius.radarius.repository.ReadingRepository;
-import data.denarius.radarius.service.ReadingService;
+import data.denarius.radarius.repositories.CameraRepository;
+import data.denarius.radarius.repositories.ReadingRepository;
+import data.denarius.radarius.services.ReadingService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

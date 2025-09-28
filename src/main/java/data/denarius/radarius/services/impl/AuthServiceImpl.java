@@ -1,6 +1,6 @@
 package data.denarius.radarius.service.impl;
 
-import data.denarius.radarius.dto.login.LoginResponseDTO;
+import data.denarius.radarius.dtos.login.LoginResponseDTO;
 import data.denarius.radarius.security.JwtIssuer;
 import data.denarius.radarius.security.UserPrincipal;
 import data.denarius.radarius.services.AuthService;

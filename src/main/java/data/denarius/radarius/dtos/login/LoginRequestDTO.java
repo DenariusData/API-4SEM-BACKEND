@@ -1,4 +1,4 @@
-package data.denarius.radarius.dto.login;
+package data.denarius.radarius.dtos.login;
 
 public record LoginRequestDTO(
         String email,

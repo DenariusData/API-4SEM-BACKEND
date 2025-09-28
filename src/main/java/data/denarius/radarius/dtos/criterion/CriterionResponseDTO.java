@@ -1,4 +1,4 @@
-package data.denarius.radarius.dto;
+package data.denarius.radarius.dtos.criterion;
 
 import java.time.OffsetDateTime;
 import java.util.List;

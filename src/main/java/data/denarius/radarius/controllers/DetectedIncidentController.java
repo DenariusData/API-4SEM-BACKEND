@@ -1,8 +1,8 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.dto.DetectedIncidentRequestDTO;
-import data.denarius.radarius.dto.DetectedIncidentResponseDTO;
-import data.radarius.radarius.services.DetectedIncidentService;
+import data.denarius.radarius.dtos.detectedincident.DetectedIncidentRequestDTO;
+import data.denarius.radarius.dtos.detectedincident.DetectedIncidentResponseDTO;
+import data.denarius.radarius.services.DetectedIncidentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

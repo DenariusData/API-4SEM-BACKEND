@@ -1,7 +1,7 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dto.ProtocolRequestDTO;
-import data.denarius.radarius.dto.ProtocolResponseDTO;
+import data.denarius.radarius.dtos.protocol.ProtocolRequestDTO;
+import data.denarius.radarius.dtos.protocol.ProtocolResponseDTO;
 
 import java.util.List;
 

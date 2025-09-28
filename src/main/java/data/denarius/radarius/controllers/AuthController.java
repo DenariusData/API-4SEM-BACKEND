@@ -1,7 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.dto.login.LoginRequestDTO;
-import data.denarius.radarius.dto.login.LoginResponseDTO;
+import data.denarius.radarius.dtos.login.LoginRequestDTO;
+import data.denarius.radarius.dtos.login.LoginResponseDTO;
 import data.denarius.radarius.exceptions.AuthorizationException;
 import data.denarius.radarius.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;

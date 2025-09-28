@@ -1,7 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.dto.CriterionLevelRequestDTO;
-import data.denarius.radarius.dto.CriterionLevelResponseDTO;
+import data.denarius.radarius.dtos.criterionlevel.CriterionLevelRequestDTO;
+import data.denarius.radarius.dtos.criterionlevel.CriterionLevelResponseDTO;
 import data.denarius.radarius.services.CriterionLevelService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

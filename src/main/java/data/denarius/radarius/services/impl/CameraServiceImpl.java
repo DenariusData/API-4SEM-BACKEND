@@ -1,11 +1,11 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.camera.CameraRequestDTO;
-import data.denarius.radarius.dto.camera.CameraResponseDTO;
+import data.denarius.radarius.dtos.camera.CameraRequestDTO;
+import data.denarius.radarius.dtos.camera.CameraResponseDTO;
 import data.denarius.radarius.entity.Camera;
 import data.denarius.radarius.entity.Road;
-import data.denarius.radarius.repository.CameraRepository;
-import data.denarius.radarius.repository.RoadRepository;
+import data.denarius.radarius.repositories.CameraRepository;
+import data.denarius.radarius.repositories.RoadRepository;
 import data.denarius.radarius.services.CameraService;
 import org.springframework.stereotype.Service;
 

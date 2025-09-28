@@ -1,7 +1,7 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.dto.RoadRequestDTO;
-import data.denarius.radarius.dto.RoadResponseDTO;
+import data.denarius.radarius.dtos.road.RoadRequestDTO;
+import data.denarius.radarius.dtos.road.RoadResponseDTO;
 
 import java.util.List;
 
