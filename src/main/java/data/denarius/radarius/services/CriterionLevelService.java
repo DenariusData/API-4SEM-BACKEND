@@ -1,4 +1,4 @@
-package data.denarius.radarius.service;
+package data.denarius.radarius.services;
 
 import data.denarius.radarius.dto.CriterionLevelRequestDTO;
 import data.denarius.radarius.dto.CriterionLevelResponseDTO;

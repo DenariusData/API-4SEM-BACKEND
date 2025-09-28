@@ -1,4 +1,4 @@
-package data.denarius.radarius.service;
+package data.denarius.radarius.services;
 
 import data.denarius.radarius.dto.ProtocolRequestDTO;
 import data.denarius.radarius.dto.ProtocolResponseDTO;
