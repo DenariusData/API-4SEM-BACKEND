@@ -1,4 +1,4 @@
-package data.denarius.radarius.controller;
+package data.denarius.radarius.controllers;
 
 import data.denarius.radarius.entity.DetectedIncident;
 import data.denarius.radarius.service.DetectedIncidentService;

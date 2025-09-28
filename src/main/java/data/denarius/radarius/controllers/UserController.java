@@ -1,4 +1,4 @@
-package data.denarius.radarius.controller;
+package data.denarius.radarius.controllers;
 
 import data.denarius.radarius.entity.User;
 import data.denarius.radarius.service.UserService;
