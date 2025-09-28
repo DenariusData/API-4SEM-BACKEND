@@ -1,19 +1,19 @@
-package data.denarius.radarius.services;
+package data.denarius.radarius.service;
 
-import data.denarius.radarius.entity.Protocol;
+import data.denarius.radarius.dto.ProtocolRequestDTO;
+import data.denarius.radarius.dto.ProtocolResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ProtocolService {
 
-    List<Protocol> findAll();
+    List<ProtocolResponseDTO> findAll();
 
-    Optional<Protocol> findById(Integer id);
+    ProtocolResponseDTO findById(Integer id);
 
-    Protocol save(Protocol protocol);
+    ProtocolResponseDTO save(ProtocolRequestDTO dto);
 
-    Protocol update(Integer id, Protocol protocol);
+    ProtocolResponseDTO update(Integer id, ProtocolRequestDTO dto);
 
     void delete(Integer id);
 }

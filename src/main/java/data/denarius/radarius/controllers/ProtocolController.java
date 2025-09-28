@@ -1,6 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.Protocol;
+import data.denarius.radarius.dto.ProtocolRequestDTO;
+import data.denarius.radarius.dto.ProtocolResponseDTO;
 import data.denarius.radarius.service.ProtocolService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,37 +12,35 @@ import java.util.List;
 @RequestMapping("/protocols")
 public class ProtocolController {
 
-    private final ProtocolService protocolService;
+    private final ProtocolService service;
 
-    public ProtocolController(ProtocolService protocolService) {
-        this.protocolService = protocolService;
+    public ProtocolController(ProtocolService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<Protocol>> getAll() {
-        return ResponseEntity.ok(protocolService.findAll());
+    public ResponseEntity<List<ProtocolResponseDTO>> getAll() {
+        return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Protocol> getById(@PathVariable Integer id) {
-        return protocolService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProtocolResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Protocol> create(@RequestBody Protocol protocol) {
-        return ResponseEntity.ok(protocolService.save(protocol));
+    public ResponseEntity<ProtocolResponseDTO> create(@RequestBody ProtocolRequestDTO dto) {
+        return ResponseEntity.ok(service.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Protocol> update(@PathVariable Integer id, @RequestBody Protocol protocol) {
-        return ResponseEntity.ok(protocolService.update(id, protocol));
+    public ResponseEntity<ProtocolResponseDTO> update(@PathVariable Integer id, @RequestBody ProtocolRequestDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        protocolService.delete(id);
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,55 +1,79 @@
 package data.denarius.radarius.services.impl;
 
+import data.denarius.radarius.dto.ProtocolRequestDTO;
+import data.denarius.radarius.dto.ProtocolResponseDTO;
 import data.denarius.radarius.entity.Protocol;
+import data.denarius.radarius.entity.User;
 import data.denarius.radarius.repository.ProtocolRepository;
+import data.denarius.radarius.repository.UserRepository;
 import data.denarius.radarius.service.ProtocolService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProtocolServiceImpl implements ProtocolService {
 
-    private final ProtocolRepository protocolRepository;
+    private final ProtocolRepository repository;
+    private final UserRepository userRepository;
 
-    public ProtocolServiceImpl(ProtocolRepository protocolRepository) {
-        this.protocolRepository = protocolRepository;
+    public ProtocolServiceImpl(ProtocolRepository repository, UserRepository userRepository) {
+        this.repository = repository;
+        this.userRepository = userRepository;
+    }
+
+    private ProtocolResponseDTO toDTO(Protocol protocol) {
+        ProtocolResponseDTO dto = new ProtocolResponseDTO();
+        dto.setProtocolId(protocol.getProtocolId());
+        dto.setName(protocol.getName());
+        dto.setCreatedAt(protocol.getCreatedAt());
+        dto.setCreatedById(protocol.getCreatedBy() != null ? protocol.getCreatedBy().getUserId() : null);
+        return dto;
+    }
+
+    private void mapDTOToEntity(ProtocolRequestDTO dto, Protocol entity) {
+        entity.setName(dto.getName());
+        entity.setCreatedAt(dto.getCreatedAt());
+
+        if (dto.getCreatedById() != null) {
+            User user = userRepository.findById(dto.getCreatedById())
+                    .orElseThrow(() -> new RuntimeException("User not found with id " + dto.getCreatedById()));
+            entity.setCreatedBy(user);
+        }
     }
 
     @Override
-    public List<Protocol> findAll() {
-        return protocolRepository.findAll();
+    public List<ProtocolResponseDTO> findAll() {
+        return repository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Protocol> findById(Integer id) {
-        return protocolRepository.findById(id);
-    }
-
-    @Override
-    public Protocol save(Protocol protocol) {
-        return protocolRepository.save(protocol);
-    }
-
-    @Override
-    public Protocol update(Integer id, Protocol protocol) {
-        return protocolRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(protocol.getName());
-                    existing.setCreatedAt(protocol.getCreatedAt());
-                    existing.setCreatedBy(protocol.getCreatedBy());
-                    existing.setAlerts(protocol.getAlerts());
-                    return protocolRepository.save(existing);
-                })
+    public ProtocolResponseDTO findById(Integer id) {
+        return repository.findById(id).map(this::toDTO)
                 .orElseThrow(() -> new RuntimeException("Protocol not found with id " + id));
     }
 
     @Override
+    public ProtocolResponseDTO save(ProtocolRequestDTO dto) {
+        Protocol protocol = new Protocol();
+        mapDTOToEntity(dto, protocol);
+        return toDTO(repository.save(protocol));
+    }
+
+    @Override
+    public ProtocolResponseDTO update(Integer id, ProtocolRequestDTO dto) {
+        Protocol protocol = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Protocol not found with id " + id));
+        mapDTOToEntity(dto, protocol);
+        return toDTO(repository.save(protocol));
+    }
+
+    @Override
     public void delete(Integer id) {
-        if (!protocolRepository.existsById(id)) {
+        if (!repository.existsById(id)) {
             throw new RuntimeException("Protocol not found with id " + id);
         }
-        protocolRepository.deleteById(id);
+        repository.deleteById(id);
     }
 }
