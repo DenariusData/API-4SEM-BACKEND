@@ -1,7 +1,8 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.DetectedIncident;
-import data.denarius.radarius.service.DetectedIncidentService;
+import data.denarius.radarius.dto.DetectedIncidentRequestDTO;
+import data.denarius.radarius.dto.DetectedIncidentResponseDTO;
+import data.radarius.radarius.service.DetectedIncidentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,37 +12,36 @@ import java.util.List;
 @RequestMapping("/detected-incidents")
 public class DetectedIncidentController {
 
-    private final DetectedIncidentService detectedIncidentService;
+    private final DetectedIncidentService service;
 
-    public DetectedIncidentController(DetectedIncidentService detectedIncidentService) {
-        this.detectedIncidentService = detectedIncidentService;
+    public DetectedIncidentController(DetectedIncidentService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<DetectedIncident>> getAll() {
-        return ResponseEntity.ok(detectedIncidentService.findAll());
+    public ResponseEntity<List<DetectedIncidentResponseDTO>> getAll() {
+        return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DetectedIncident> getById(@PathVariable Integer id) {
-        return detectedIncidentService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<DetectedIncidentResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<DetectedIncident> create(@RequestBody DetectedIncident detectedIncident) {
-        return ResponseEntity.ok(detectedIncidentService.save(detectedIncident));
+    public ResponseEntity<DetectedIncidentResponseDTO> create(@RequestBody DetectedIncidentRequestDTO dto) {
+        return ResponseEntity.ok(service.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DetectedIncident> update(@PathVariable Integer id, @RequestBody DetectedIncident detectedIncident) {
-        return ResponseEntity.ok(detectedIncidentService.update(id, detectedIncident));
+    public ResponseEntity<DetectedIncidentResponseDTO> update(@PathVariable Integer id,
+                                                              @RequestBody DetectedIncidentRequestDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        detectedIncidentService.delete(id);
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -10,19 +10,43 @@ public class DetectedIncidentResponseDTO {
     private String incidentType;
     private OffsetDateTime createdAt;
 
-    // Getters e Setters
-    public Integer getIncidentId() { return incidentId; }
-    public void setIncidentId(Integer incidentId) { this.incidentId = incidentId; }
+    public Integer getIncidentId() {
+        return incidentId;
+    }
 
-    public Integer getAlertId() { return alertId; }
-    public void setAlertId(Integer alertId) { this.alertId = alertId; }
+    public void setIncidentId(Integer incidentId) {
+        this.incidentId = incidentId;
+    }
 
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
+    public Integer getAlertId() {
+        return alertId;
+    }
 
-    public String getIncidentType() { return incidentType; }
-    public void setIncidentType(String incidentType) { this.incidentType = incidentType; }
+    public void setAlertId(Integer alertId) {
+        this.alertId = alertId;
+    }
 
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public String getIncidentType() {
+        return incidentType;
+    }
+
+    public void setIncidentType(String incidentType) {
+        this.incidentType = incidentType;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
