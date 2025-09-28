@@ -1,7 +1,7 @@
 package data.denarius.radarius.service.impl;
 
 import data.denarius.radarius.entity.Person;
-import data.denarius.radarius.service.PersonService;
+import data.denarius.radarius.services.PersonService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
