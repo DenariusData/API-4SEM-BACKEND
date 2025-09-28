@@ -1,6 +1,7 @@
 package data.denarius.radarius.dto;
 
 import data.denarius.radarius.enums.VehicleTypeEnum;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
@@ -13,22 +14,51 @@ public class ReadingResponseDTO {
     private BigDecimal speed;
     private String plate;
 
-    // Getters e Setters
-    public Integer getReadingId() { return readingId; }
-    public void setReadingId(Integer readingId) { this.readingId = readingId; }
+    public Integer getReadingId() {
+        return readingId;
+    }
 
-    public Integer getCameraId() { return cameraId; }
-    public void setCameraId(Integer cameraId) { this.cameraId = cameraId; }
+    public void setReadingId(Integer readingId) {
+        this.readingId = readingId;
+    }
 
-    public OffsetDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(OffsetDateTime timestamp) { this.timestamp = timestamp; }
+    public Integer getCameraId() {
+        return cameraId;
+    }
 
-    public VehicleTypeEnum getVehicleType() { return vehicleType; }
-    public void setVehicleType(VehicleTypeEnum vehicleType) { this.vehicleType = vehicleType; }
+    public void setCameraId(Integer cameraId) {
+        this.cameraId = cameraId;
+    }
 
-    public BigDecimal getSpeed() { return speed; }
-    public void setSpeed(BigDecimal speed) { this.speed = speed; }
+    public OffsetDateTime getTimestamp() {
+        return timestamp;
+    }
 
-    public String getPlate() { return plate; }
-    public void setPlate(String plate) { this.plate = plate; }
+    public void setTimestamp(OffsetDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public VehicleTypeEnum getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(VehicleTypeEnum vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public BigDecimal getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(BigDecimal speed) {
+        this.speed = speed;
+    }
+
+    public String getPlate() {
+        return plate;
+    }
+
+    public void setPlate(String plate) {
+        this.plate = plate;
+    }
 }

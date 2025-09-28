@@ -1,19 +1,19 @@
-package data.denarius.radarius.services;
+package data.denarius.radarius.service;
 
-import data.denarius.radarius.entity.Reading;
+import data.denarius.radarius.dto.ReadingRequestDTO;
+import data.denarius.radarius.dto.ReadingResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ReadingService {
 
-    List<Reading> findAll();
+    List<ReadingResponseDTO> findAll();
 
-    Optional<Reading> findById(Integer id);
+    ReadingResponseDTO findById(Integer id);
 
-    Reading save(Reading reading);
+    ReadingResponseDTO save(ReadingRequestDTO dto);
 
-    Reading update(Integer id, Reading reading);
+    ReadingResponseDTO update(Integer id, ReadingRequestDTO dto);
 
     void delete(Integer id);
 }
