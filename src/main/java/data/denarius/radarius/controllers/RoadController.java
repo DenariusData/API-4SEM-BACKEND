@@ -1,7 +1,8 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.Road;
-import data.denarius.radarius.service.RoadService;
+import data.denarius.radarius.dto.RoadRequestDTO;
+import data.denarius.radarius.dto.RoadResponseDTO;
+import data.radarius.radarius.service.RoadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,25 +19,23 @@ public class RoadController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Road>> getAll() {
+    public ResponseEntity<List<RoadResponseDTO>> getAll() {
         return ResponseEntity.ok(roadService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Road> getById(@PathVariable Integer id) {
-        return roadService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<RoadResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(roadService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Road> create(@RequestBody Road road) {
-        return ResponseEntity.ok(roadService.save(road));
+    public ResponseEntity<RoadResponseDTO> create(@RequestBody RoadRequestDTO dto) {
+        return ResponseEntity.ok(roadService.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Road> update(@PathVariable Integer id, @RequestBody Road road) {
-        return ResponseEntity.ok(roadService.update(id, road));
+    public ResponseEntity<RoadResponseDTO> update(@PathVariable Integer id, @RequestBody RoadRequestDTO dto) {
+        return ResponseEntity.ok(roadService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")

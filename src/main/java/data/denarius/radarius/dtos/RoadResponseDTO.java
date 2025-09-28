@@ -2,7 +2,6 @@ package data.denarius.radarius.dto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 public class RoadResponseDTO {
 
@@ -11,24 +10,44 @@ public class RoadResponseDTO {
     private BigDecimal speedLimit;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private List<Integer> cameraIds;
 
-    // Getters e Setters
-    public Integer getRoadId() { return roadId; }
-    public void setRoadId(Integer roadId) { this.roadId = roadId; }
+    public Integer getRoadId() {
+        return roadId;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public void setRoadId(Integer roadId) {
+        this.roadId = roadId;
+    }
 
-    public BigDecimal getSpeedLimit() { return speedLimit; }
-    public void setSpeedLimit(BigDecimal speedLimit) { this.speedLimit = speedLimit; }
+    public String getAddress() {
+        return address;
+    }
 
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public BigDecimal getSpeedLimit() {
+        return speedLimit;
+    }
 
-    public List<Integer> getCameraIds() { return cameraIds; }
-    public void setCameraIds(List<Integer> cameraIds) { this.cameraIds = cameraIds; }
+    public void setSpeedLimit(BigDecimal speedLimit) {
+        this.speedLimit = speedLimit;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

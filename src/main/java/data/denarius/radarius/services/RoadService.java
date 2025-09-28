@@ -1,19 +1,19 @@
-package data.denarius.radarius.services;
+package data.denarius.radarius.service;
 
-import data.denarius.radarius.entity.Road;
+import data.denarius.radarius.dto.RoadRequestDTO;
+import data.denarius.radarius.dto.RoadResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface RoadService {
 
-    List<Road> findAll();
+    List<RoadResponseDTO> findAll();
 
-    Optional<Road> findById(Integer id);
+    RoadResponseDTO findById(Integer id);
 
-    Road save(Road road);
+    RoadResponseDTO save(RoadRequestDTO dto);
 
-    Road update(Integer id, Road road);
+    RoadResponseDTO update(Integer id, RoadRequestDTO dto);
 
     void delete(Integer id);
 }
