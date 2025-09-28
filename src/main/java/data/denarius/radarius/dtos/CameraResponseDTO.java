@@ -1,8 +1,7 @@
-package data.denarius.radarius.dto;
+package data.denarius.radarius.dto.camera;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 public class CameraResponseDTO {
 
@@ -13,33 +12,74 @@ public class CameraResponseDTO {
     private Boolean active;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private List<Integer> readingIds;
-    private List<Integer> alertIds;
 
-    public Integer getCameraId() { return cameraId; }
-    public void setCameraId(Integer cameraId) { this.cameraId = cameraId; }
+    public CameraResponseDTO() {
+    }
 
-    public Integer getRoadId() { return roadId; }
-    public void setRoadId(Integer roadId) { this.roadId = roadId; }
+    public CameraResponseDTO(Integer cameraId, Integer roadId, BigDecimal latitude, BigDecimal longitude,
+                             Boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        this.cameraId = cameraId;
+        this.roadId = roadId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.active = active;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 
-    public BigDecimal getLatitude() { return latitude; }
-    public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
+    public Integer getCameraId() {
+        return cameraId;
+    }
 
-    public BigDecimal getLongitude() { return longitude; }
-    public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
+    public void setCameraId(Integer cameraId) {
+        this.cameraId = cameraId;
+    }
 
-    public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
+    public Integer getRoadId() {
+        return roadId;
+    }
 
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public void setRoadId(Integer roadId) {
+        this.roadId = roadId;
+    }
 
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
 
-    public List<Integer> getReadingIds() { return readingIds; }
-    public void setReadingIds(List<Integer> readingIds) { this.readingIds = readingIds; }
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
 
-    public List<Integer> getAlertIds() { return alertIds; }
-    public void setAlertIds(List<Integer> alertIds) { this.alertIds = alertIds; }
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

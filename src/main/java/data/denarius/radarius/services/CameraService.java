@@ -1,19 +1,19 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.entity.Camera;
+import data.denarius.radarius.dto.camera.CameraRequestDTO;
+import data.denarius.radarius.dto.camera.CameraResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CameraService {
 
-    List<Camera> findAll();
+    List<CameraResponseDTO> findAll();
 
-    Optional<Camera> findById(Integer id);
+    CameraResponseDTO findById(Integer id);
 
-    Camera save(Camera camera);
+    CameraResponseDTO save(CameraRequestDTO dto);
 
-    Camera update(Integer id, Camera camera);
+    CameraResponseDTO update(Integer id, CameraRequestDTO dto);
 
     void delete(Integer id);
 }

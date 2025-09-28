@@ -1,7 +1,8 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.Camera;
-import data.denarius.radarius.service.CameraService;
+import data.denarius.radarius.dto.camera.CameraRequestDTO;
+import data.denarius.radarius.dto.camera.CameraResponseDTO;
+import data.denarius.radarius.services.CameraService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,25 +19,23 @@ public class CameraController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Camera>> getAll() {
+    public ResponseEntity<List<CameraResponseDTO>> getAll() {
         return ResponseEntity.ok(cameraService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Camera> getById(@PathVariable Integer id) {
-        return cameraService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CameraResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(cameraService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Camera> create(@RequestBody Camera camera) {
-        return ResponseEntity.ok(cameraService.save(camera));
+    public ResponseEntity<CameraResponseDTO> create(@RequestBody CameraRequestDTO dto) {
+        return ResponseEntity.ok(cameraService.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Camera> update(@PathVariable Integer id, @RequestBody Camera camera) {
-        return ResponseEntity.ok(cameraService.update(id, camera));
+    public ResponseEntity<CameraResponseDTO> update(@PathVariable Integer id, @RequestBody CameraRequestDTO dto) {
+        return ResponseEntity.ok(cameraService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
