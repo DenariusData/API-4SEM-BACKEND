@@ -1,6 +1,7 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.User;
+import data.denarius.radarius.dto.UserRequestDTO;
+import data.denarius.radarius.dto.UserResponseDTO;
 import data.denarius.radarius.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,25 +19,23 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAll() {
+    public ResponseEntity<List<UserResponseDTO>> getAll() {
         return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getById(@PathVariable Integer id) {
-        return userService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UserResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(userService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<User> create(@RequestBody User user) {
-        return ResponseEntity.ok(userService.save(user));
+    public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO dto) {
+        return ResponseEntity.ok(userService.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Integer id, @RequestBody User user) {
-        return ResponseEntity.ok(userService.update(id, user));
+    public ResponseEntity<UserResponseDTO> update(@PathVariable Integer id, @RequestBody UserRequestDTO dto) {
+        return ResponseEntity.ok(userService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
