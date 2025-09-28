@@ -1,5 +1,6 @@
 package data.denarius.radarius.controllers;
 
+import data.denarius.radarius.dtos.request.AlertRequestDTO;
 import data.denarius.radarius.entity.Alert;
 import data.denarius.radarius.service.AlertService;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +31,15 @@ public class AlertController {
     }
 
     @PostMapping
-    public ResponseEntity<Alert> create(@RequestBody Alert alert) {
-        return ResponseEntity.ok(alertService.save(alert));
+    public ResponseEntity<Alert> create(@RequestBody AlertRequestDTO request) {
+        Alert created = alertService.save(request);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Alert> update(@PathVariable Integer id, @RequestBody Alert alert) {
-        return ResponseEntity.ok(alertService.update(id, alert));
+    public ResponseEntity<Alert> update(@PathVariable Integer id, @RequestBody AlertRequestDTO request) {
+        Alert updated = alertService.update(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")

@@ -1,10 +1,12 @@
 package data.denarius.radarius.services.impl;
 
+import data.denarius.radarius.dtos.request.AlertRequestDTO;
 import data.denarius.radarius.entity.Alert;
-import data.denarius.radarius.repository.AlertRepository;
+import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.AlertService;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +14,21 @@ import java.util.Optional;
 public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
+    private final CriterionRepository criterionRepository;
+    private final ProtocolRepository protocolRepository;
+    private final UserRepository userRepository;
+    private final CameraRepository cameraRepository;
 
-    public AlertServiceImpl(AlertRepository alertRepository) {
+    public AlertServiceImpl(AlertRepository alertRepository,
+                            CriterionRepository criterionRepository,
+                            ProtocolRepository protocolRepository,
+                            UserRepository userRepository,
+                            CameraRepository cameraRepository) {
         this.alertRepository = alertRepository;
+        this.criterionRepository = criterionRepository;
+        this.protocolRepository = protocolRepository;
+        this.userRepository = userRepository;
+        this.cameraRepository = cameraRepository;
     }
 
     @Override
@@ -28,26 +42,18 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public Alert save(Alert alert) {
+    public Alert save(AlertRequestDTO request) {
+        Alert alert = new Alert();
+        mapRequestToEntity(request, alert);
+        alert.setCreatedAt(OffsetDateTime.now());
         return alertRepository.save(alert);
     }
 
     @Override
-    public Alert update(Integer id, Alert alert) {
+    public Alert update(Integer id, AlertRequestDTO request) {
         return alertRepository.findById(id)
                 .map(existing -> {
-                    existing.setCriterion(alert.getCriterion());
-                    existing.setProtocol(alert.getProtocol());
-                    existing.setLevel(alert.getLevel());
-                    existing.setStatus(alert.getStatus());
-                    existing.setAssignedTo(alert.getAssignedTo());
-                    existing.setMessage(alert.getMessage());
-                    existing.setConclusion(alert.getConclusion());
-                    existing.setCamera(alert.getCamera());
-                    existing.setCreatedAt(alert.getCreatedAt());
-                    existing.setSourceType(alert.getSourceType());
-                    existing.setIncidents(alert.getIncidents());
-                    existing.setLogs(alert.getLogs());
+                    mapRequestToEntity(request, existing);
                     return alertRepository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("Alert not found with id " + id));
@@ -59,5 +65,25 @@ public class AlertServiceImpl implements AlertService {
             throw new RuntimeException("Alert not found with id " + id);
         }
         alertRepository.deleteById(id);
+    }
+
+    private void mapRequestToEntity(AlertRequestDTO request, Alert alert) {
+        if (request.getCriterionId() != null)
+            criterionRepository.findById(request.getCriterionId()).ifPresent(alert::setCriterion);
+
+        if (request.getProtocolId() != null)
+            protocolRepository.findById(request.getProtocolId()).ifPresent(alert::setProtocol);
+
+        if (request.getAssignedToId() != null)
+            userRepository.findById(request.getAssignedToId()).ifPresent(alert::setAssignedTo);
+
+        if (request.getCameraId() != null)
+            cameraRepository.findById(request.getCameraId()).ifPresent(alert::setCamera);
+
+        alert.setLevel(request.getLevel());
+        alert.setStatus(request.getStatus());
+        alert.setMessage(request.getMessage());
+        alert.setConclusion(request.getConclusion());
+        alert.setSourceType(request.getSourceType());
     }
 }
