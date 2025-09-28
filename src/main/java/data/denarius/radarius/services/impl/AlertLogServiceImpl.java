@@ -1,4 +1,4 @@
-package data.denarius.radarius.service.impl;
+package data.denarius.radarius.services.impl;
 
 import data.denarius.radarius.entity.AlertLog;
 import data.denarius.radarius.repository.AlertLogRepository;
