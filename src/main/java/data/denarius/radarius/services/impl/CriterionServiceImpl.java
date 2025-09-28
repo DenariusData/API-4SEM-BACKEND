@@ -1,49 +1,75 @@
 package data.denarius.radarius.services.impl;
 
+import data.denarius.radarius.dto.CriterionRequestDTO;
+import data.denarius.radarius.dto.CriterionResponseDTO;
 import data.denarius.radarius.entity.Criterion;
+import data.denarius.radarius.entity.User;
 import data.denarius.radarius.repository.CriterionRepository;
-import data.denarius.radarius.service.CriterionService;
+import data.denarius.radarius.repository.UserRepository;
+import data.denarius.radarius.services.CriterionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CriterionServiceImpl implements CriterionService {
 
     private final CriterionRepository criterionRepository;
+    private final UserRepository userRepository;
 
-    public CriterionServiceImpl(CriterionRepository criterionRepository) {
+    public CriterionServiceImpl(CriterionRepository criterionRepository, UserRepository userRepository) {
         this.criterionRepository = criterionRepository;
+        this.userRepository = userRepository;
+    }
+
+    private CriterionResponseDTO toDTO(Criterion criterion) {
+        CriterionResponseDTO dto = new CriterionResponseDTO();
+        dto.setCriterionId(criterion.getCriterionId());
+        dto.setName(criterion.getName());
+        dto.setCreatedAt(criterion.getCreatedAt());
+        dto.setCreatedById(criterion.getCreatedBy() != null ? criterion.getCreatedBy().getUserId() : null);
+        if (criterion.getLevels() != null)
+            dto.setLevelIds(criterion.getLevels().stream().map(l -> l.getLevelId()).toList());
+        if (criterion.getAlerts() != null)
+            dto.setAlertIds(criterion.getAlerts().stream().map(a -> a.getAlertId()).toList());
+        return dto;
+    }
+
+    private void mapRequestToEntity(CriterionRequestDTO dto, Criterion criterion) {
+        criterion.setName(dto.getName());
+        if (dto.getCreatedById() != null) {
+            User user = userRepository.findById(dto.getCreatedById())
+                    .orElseThrow(() -> new RuntimeException("User not found with id " + dto.getCreatedById()));
+            criterion.setCreatedBy(user);
+        }
     }
 
     @Override
-    public List<Criterion> findAll() {
-        return criterionRepository.findAll();
+    public List<CriterionResponseDTO> findAll() {
+        return criterionRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Criterion> findById(Integer id) {
-        return criterionRepository.findById(id);
-    }
-
-    @Override
-    public Criterion save(Criterion criterion) {
-        return criterionRepository.save(criterion);
-    }
-
-    @Override
-    public Criterion update(Integer id, Criterion criterion) {
+    public CriterionResponseDTO findById(Integer id) {
         return criterionRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(criterion.getName());
-                    existing.setCreatedAt(criterion.getCreatedAt());
-                    existing.setCreatedBy(criterion.getCreatedBy());
-                    existing.setLevels(criterion.getLevels());
-                    existing.setAlerts(criterion.getAlerts());
-                    return criterionRepository.save(existing);
-                })
+                .map(this::toDTO)
                 .orElseThrow(() -> new RuntimeException("Criterion not found with id " + id));
+    }
+
+    @Override
+    public CriterionResponseDTO save(CriterionRequestDTO dto) {
+        Criterion criterion = new Criterion();
+        mapRequestToEntity(dto, criterion);
+        return toDTO(criterionRepository.save(criterion));
+    }
+
+    @Override
+    public CriterionResponseDTO update(Integer id, CriterionRequestDTO dto) {
+        Criterion criterion = criterionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Criterion not found with id " + id));
+        mapRequestToEntity(dto, criterion);
+        return toDTO(criterionRepository.save(criterion));
     }
 
     @Override

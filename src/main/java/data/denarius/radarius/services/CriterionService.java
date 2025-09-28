@@ -1,19 +1,19 @@
 package data.denarius.radarius.services;
 
-import data.denarius.radarius.entity.Criterion;
+import data.denarius.radarius.dto.CriterionRequestDTO;
+import data.denarius.radarius.dto.CriterionResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CriterionService {
 
-    List<Criterion> findAll();
+    List<CriterionResponseDTO> findAll();
 
-    Optional<Criterion> findById(Integer id);
+    CriterionResponseDTO findById(Integer id);
 
-    Criterion save(Criterion criterion);
+    CriterionResponseDTO save(CriterionRequestDTO dto);
 
-    Criterion update(Integer id, Criterion criterion);
+    CriterionResponseDTO update(Integer id, CriterionRequestDTO dto);
 
     void delete(Integer id);
 }

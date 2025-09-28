@@ -1,7 +1,8 @@
 package data.denarius.radarius.controllers;
 
-import data.denarius.radarius.entity.Criterion;
-import data.denarius.radarius.service.CriterionService;
+import data.denarius.radarius.dto.CriterionRequestDTO;
+import data.denarius.radarius.dto.CriterionResponseDTO;
+import data.denarius.radarius.services.CriterionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,25 +19,24 @@ public class CriterionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Criterion>> getAll() {
+    public ResponseEntity<List<CriterionResponseDTO>> getAll() {
         return ResponseEntity.ok(criterionService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Criterion> getById(@PathVariable Integer id) {
-        return criterionService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CriterionResponseDTO> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(criterionService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Criterion> create(@RequestBody Criterion criterion) {
-        return ResponseEntity.ok(criterionService.save(criterion));
+    public ResponseEntity<CriterionResponseDTO> create(@RequestBody CriterionRequestDTO dto) {
+        return ResponseEntity.ok(criterionService.save(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Criterion> update(@PathVariable Integer id, @RequestBody Criterion criterion) {
-        return ResponseEntity.ok(criterionService.update(id, criterion));
+    public ResponseEntity<CriterionResponseDTO> update(@PathVariable Integer id,
+                                                       @RequestBody CriterionRequestDTO dto) {
+        return ResponseEntity.ok(criterionService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
