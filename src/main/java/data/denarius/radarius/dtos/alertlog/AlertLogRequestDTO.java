@@ -11,7 +11,6 @@ public class AlertLogRequestDTO {
     private OffsetDateTime eventTimestamp;
     private String status;
 
-    // Getters e Setters
     public Integer getAlertId() { return alertId; }
     public void setAlertId(Integer alertId) { this.alertId = alertId; }
 

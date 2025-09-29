@@ -1,6 +1,6 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dtos.request.AlertRequestDTO;
+import data.denarius.radarius.dtos.alert.AlertRequestDTO;
 import data.denarius.radarius.entity.Alert;
 import data.denarius.radarius.repositories.*;
 import data.denarius.radarius.services.AlertService;

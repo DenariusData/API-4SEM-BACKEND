@@ -12,7 +12,6 @@ public class CriterionResponseDTO {
     private List<Integer> levelIds;
     private List<Integer> alertIds;
 
-    // Getters e Setters
     public Integer getCriterionId() { return criterionId; }
     public void setCriterionId(Integer criterionId) { this.criterionId = criterionId; }
 
