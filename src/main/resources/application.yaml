@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: radarius
+  datasource:
+    url: jdbc:postgresql://localhost:5432/radarius
+    username: denarius
+    password: denarius
+    driver-class-name: org.postgresql.Driver
+  security:
+    user:
+      name: denarius
+      password: denarius
+
+cors:
+  allowed-origins: "*"
+  allowed-methods: GET,POST,PUT,PATCH,DELETE
+
+security:
+  jwt:
+    secret-key: radarius
