@@ -15,6 +15,7 @@ public class CriterionLevel {
     @JoinColumn(name = "criterion_id")
     private Criterion criterion;
 
+    @Column(name = "cl_level")
     private Short level;
 
     @Column(name = "created_at")

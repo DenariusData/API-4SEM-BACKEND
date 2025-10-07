@@ -22,8 +22,10 @@ public class Alert {
     @JoinColumn(name = "protocol_id")
     private Protocol protocol;
 
+    @Column(name = "ale_level")
     private Short level;
 
+    @Column(name = "ale_status")
     private String status;
 
     @ManyToOne

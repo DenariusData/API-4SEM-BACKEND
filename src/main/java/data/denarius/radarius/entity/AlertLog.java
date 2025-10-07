@@ -26,6 +26,7 @@ public class AlertLog {
     @Column(name = "event_ts")
     private OffsetDateTime eventTimestamp;
 
+    @Column(name = "al_status")
     private String status;
 
     public Integer getLogId() {
