@@ -26,7 +26,7 @@ public class Camera {
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    @Column(name = "update_at")
+    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "camera")

@@ -15,13 +15,13 @@ public class Road {
 
     private String address;
 
-    @Column(name = "speed_limit")
+    @Column(name = "road_speed")
     private BigDecimal speedLimit;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
-    @Column(name = "update_at")
+    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "road")

@@ -2,14 +2,21 @@ spring:
   application:
     name: radarius
   datasource:
-    url: jdbc:postgresql://localhost:5432/radarius
-    username: denarius
-    password: denarius
-    driver-class-name: org.postgresql.Driver
-  security:
-    user:
-      name: denarius
-      password: denarius
+    url: jdbc:oracle:thin:@${TNS_NAME}?TNS_ADMIN=${WALLET_DIR}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+    type: oracle.ucp.jdbc.PoolDataSourceImpl
+    oracleucp:
+      connection-factory-class-name: oracle.jdbc.pool.OracleDataSource
+      connection-pool-name: ADBExample
+      initial-pool-size: 5
+      min-pool-size: 1
+      max-pool-size: 30
+      shared: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
 cors:
   allowed-origins: "*"

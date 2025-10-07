@@ -17,6 +17,7 @@ public class Reading {
     @JoinColumn(name = "camera_id")
     private Camera camera;
 
+    @Column(name = "created_at")
     private OffsetDateTime timestamp;
 
     @Enumerated(EnumType.STRING)
