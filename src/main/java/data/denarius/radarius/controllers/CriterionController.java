@@ -19,12 +19,12 @@ public class CriterionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CriterionResponseDTO>> getAll() {
+    public ResponseEntity<List<CriterionResponseDTO>> findAll() {
         return ResponseEntity.ok(criterionService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CriterionResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<CriterionResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(criterionService.findById(id));
     }
 

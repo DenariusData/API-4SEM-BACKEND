@@ -18,12 +18,12 @@ public class AlertLogController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AlertLog>> getAll() {
+    public ResponseEntity<List<AlertLog>> findAll() {
         return ResponseEntity.ok(alertLogService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AlertLog> getById(@PathVariable Integer id) {
+    public ResponseEntity<AlertLog> findById(@PathVariable Integer id) {
         return alertLogService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

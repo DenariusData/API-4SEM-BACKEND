@@ -19,12 +19,12 @@ public class CameraController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CameraResponseDTO>> getAll() {
+    public ResponseEntity<List<CameraResponseDTO>> findAll() {
         return ResponseEntity.ok(cameraService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CameraResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<CameraResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(cameraService.findById(id));
     }
 

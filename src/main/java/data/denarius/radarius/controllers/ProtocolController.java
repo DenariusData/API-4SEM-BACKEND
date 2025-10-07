@@ -19,12 +19,12 @@ public class ProtocolController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProtocolResponseDTO>> getAll() {
+    public ResponseEntity<List<ProtocolResponseDTO>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProtocolResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<ProtocolResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 

@@ -19,12 +19,12 @@ public class ReadingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReadingResponseDTO>> getAll() {
+    public ResponseEntity<List<ReadingResponseDTO>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReadingResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<ReadingResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 

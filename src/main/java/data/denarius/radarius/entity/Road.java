@@ -1,6 +1,9 @@
 package data.denarius.radarius.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -18,9 +21,11 @@ public class Road {
     @Column(name = "speed_limit")
     private BigDecimal speedLimit;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "update_at")
     private OffsetDateTime updatedAt;
 

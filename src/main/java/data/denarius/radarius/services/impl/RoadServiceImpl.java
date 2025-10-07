@@ -1,7 +1,7 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.RoadRequestDTO;
-import data.denarius.radarius.dto.RoadResponseDTO;
+import data.denarius.radarius.dtos.road.RoadRequestDTO;
+import data.denarius.radarius.dtos.road.RoadResponseDTO;
 import data.denarius.radarius.entity.Road;
 import data.denarius.radarius.repositories.RoadRepository;
 import data.denarius.radarius.services.RoadService;

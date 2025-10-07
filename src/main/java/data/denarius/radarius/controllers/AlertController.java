@@ -19,12 +19,12 @@ public class AlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AlertResponseDTO>> getAll() {
+    public ResponseEntity<List<AlertResponseDTO>> findAll() {
         return ResponseEntity.ok(alertService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AlertResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<AlertResponseDTO> findById(@PathVariable Integer id) {
         return alertService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

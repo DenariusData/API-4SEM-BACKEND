@@ -19,12 +19,12 @@ public class DetectedIncidentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DetectedIncidentResponseDTO>> getAll() {
+    public ResponseEntity<List<DetectedIncidentResponseDTO>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DetectedIncidentResponseDTO> getById(@PathVariable Integer id) {
+    public ResponseEntity<DetectedIncidentResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
 

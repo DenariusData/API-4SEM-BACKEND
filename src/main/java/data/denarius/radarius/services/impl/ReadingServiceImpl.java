@@ -1,18 +1,20 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.ReadingRequestDTO;
-import data.denarius.radarius.dto.ReadingResponseDTO;
+import data.denarius.radarius.dtos.reading.ReadingRequestDTO;
+import data.denarius.radarius.dtos.reading.ReadingResponseDTO;
 import data.denarius.radarius.entity.Camera;
 import data.denarius.radarius.entity.Reading;
 import data.denarius.radarius.repositories.CameraRepository;
 import data.denarius.radarius.repositories.ReadingRepository;
 import data.denarius.radarius.services.ReadingService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ReadingServiceImpl implements ReadingService {
 
     private final ReadingRepository readingRepository;
@@ -48,14 +50,17 @@ public class ReadingServiceImpl implements ReadingService {
 
     @Override
     public List<ReadingResponseDTO> findAll() {
-        return readingRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+        return readingRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ReadingResponseDTO findById(Integer id) {
-        return readingRepository.findById(id)
-                .map(this::toDTO)
+        Reading reading = readingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reading not found with id " + id));
+        return toDTO(reading);
     }
 
     @Override

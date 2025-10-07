@@ -1,11 +1,10 @@
-package data.denarius.radarius.service.impl;
+package data.denarius.radarius.services.impl;
 
 import data.denarius.radarius.dtos.login.LoginResponseDTO;
 import data.denarius.radarius.security.JwtIssuer;
 import data.denarius.radarius.security.UserPrincipal;
 import data.denarius.radarius.services.AuthService;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,8 +21,8 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(email, password)
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
-        var userPrincipal = (UserPrincipal)auth.getPrincipal();
-        var token = jwtIssuer.issue(userPrincipal.getUserId(), userPrincipal.getEmail());
+        var UserPrincipal = (UserPrincipal)auth.getPrincipal();
+        var token = jwtIssuer.issue(userPrincipal.getPersonId(), userPrincipal.getEmail());
         return new LoginResponseDTO(token);
     }
 }

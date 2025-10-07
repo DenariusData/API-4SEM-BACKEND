@@ -1,11 +1,11 @@
 package data.denarius.radarius.services.impl;
 
-import data.denarius.radarius.dto.CriterionRequestDTO;
-import data.denarius.radarius.dto.CriterionResponseDTO;
+import data.denarius.radarius.dtos.criterion.CriterionRequestDTO;
+import data.denarius.radarius.dtos.criterion.CriterionResponseDTO;
 import data.denarius.radarius.entity.Criterion;
-import data.denarius.radarius.entity.User;
+import data.denarius.radarius.entity.Person;
 import data.denarius.radarius.repositories.CriterionRepository;
-import data.denarius.radarius.repositories.UserRepository;
+import data.denarius.radarius.repositories.PersonRepository;
 import data.denarius.radarius.services.CriterionService;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 public class CriterionServiceImpl implements CriterionService {
 
     private final CriterionRepository criterionRepository;
-    private final UserRepository userRepository;
+    private final PersonRepository personRepository;
 
-    public CriterionServiceImpl(CriterionRepository criterionRepository, UserRepository userRepository) {
+    public CriterionServiceImpl(CriterionRepository criterionRepository, PersonRepository personRepository) {
         this.criterionRepository = criterionRepository;
-        this.userRepository = userRepository;
+        this.personRepository = personRepository;
     }
 
     private CriterionResponseDTO toDTO(Criterion criterion) {
@@ -28,9 +28,9 @@ public class CriterionServiceImpl implements CriterionService {
         dto.setCriterionId(criterion.getCriterionId());
         dto.setName(criterion.getName());
         dto.setCreatedAt(criterion.getCreatedAt());
-        dto.setCreatedById(criterion.getCreatedBy() != null ? criterion.getCreatedBy().getUserId() : null);
+        dto.setCreatedById(criterion.getCreatedBy() != null ? criterion.getCreatedBy().getPersonId() : null);
         if (criterion.getLevels() != null)
-            dto.setLevelIds(criterion.getLevels().stream().map(l -> l.getLevelId()).toList());
+            dto.setLevelIds(criterion.getLevels().stream().map(l -> l.getCriterionLevelId()).toList());
         if (criterion.getAlerts() != null)
             dto.setAlertIds(criterion.getAlerts().stream().map(a -> a.getAlertId()).toList());
         return dto;
@@ -39,9 +39,9 @@ public class CriterionServiceImpl implements CriterionService {
     private void mapRequestToEntity(CriterionRequestDTO dto, Criterion criterion) {
         criterion.setName(dto.getName());
         if (dto.getCreatedById() != null) {
-            User user = userRepository.findById(dto.getCreatedById())
+            Person person = personRepository.findById(dto.getCreatedById())
                     .orElseThrow(() -> new RuntimeException("User not found with id " + dto.getCreatedById()));
-            criterion.setCreatedBy(user);
+            criterion.setCreatedBy(person);
         }
     }
 

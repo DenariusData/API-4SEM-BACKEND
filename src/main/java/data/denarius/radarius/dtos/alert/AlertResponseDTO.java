@@ -20,7 +20,6 @@ public class AlertResponseDTO {
     private List<Integer> incidentIds;
     private List<Integer> logIds;
 
-    // Getters e Setters
     public Integer getAlertId() { return alertId; }
     public void setAlertId(Integer alertId) { this.alertId = alertId; }
 
