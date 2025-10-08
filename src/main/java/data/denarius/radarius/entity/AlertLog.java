@@ -1,87 +1,45 @@
 package data.denarius.radarius.entity;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
 
 @Entity
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "alert_log")
 public class AlertLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer logId;
+    @JoinColumn(name = "al_id")
+    private Integer Id;
 
     @ManyToOne
     @JoinColumn(name = "alert_id")
     private Alert alert;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private Person person;
+    @JoinColumn(name = "zone_id")
+    private Zone zone;
 
-    private String channel;
+    @Column(name = "al_created_at")
+    private LocalDateTime createdAt;
 
-    private String event;
+    @Column(name = "al_previous_level")
+    private Short previousLevel;
 
-    @Column(name = "event_ts")
-    private OffsetDateTime eventTimestamp;
+    @Column(name = "al_new_level")
+    private Short newLevel;
 
-    @Column(name = "al_status")
-    private String status;
+    @Column(name = "al_closed_at")
+    private LocalDateTime closedAt;
 
-    public Integer getLogId() {
-        return logId;
-    }
 
-    public void setLogId(Integer logId) {
-        this.logId = logId;
-    }
-
-    public Alert getAlert() {
-        return alert;
-    }
-
-    public void setAlert(Alert alert) {
-        this.alert = alert;
-    }
-
-    public Person getUser() {
-        return person;
-    }
-
-    public void setUser(Person person) {
-        this.person = person;
-    }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
-    }
-
-    public String getEvent() {
-        return event;
-    }
-
-    public void setEvent(String event) {
-        this.event = event;
-    }
-
-    public OffsetDateTime getEventTimestamp() {
-        return eventTimestamp;
-    }
-
-    public void setEventTimestamp(OffsetDateTime eventTimestamp) {
-        this.eventTimestamp = eventTimestamp;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 }

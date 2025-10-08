@@ -1,67 +1,41 @@
 package data.denarius.radarius.entity;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "protocol")
 public class Protocol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer protocolId;
+    @JoinColumn(name = "pro_id")
+    private Integer Id;
 
+    @OneToOne(mappedBy = "root_cause")
+    private Protocol rootCause;
+
+    @Column(name = "pro_name")
     private String name;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    @Column(name = "pro_created_at")
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "created_by")
     private Person createdBy;
 
-    @OneToMany(mappedBy = "protocol")
+    @OneToMany(mappedBy = "alert")
     private List<Alert> alerts;
 
-    public Integer getProtocolId() {
-        return protocolId;
-    }
-
-    public void setProtocolId(Integer protocolId) {
-        this.protocolId = protocolId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Person getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Person createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public List<Alert> getAlerts() {
-        return alerts;
-    }
-
-    public void setAlerts(List<Alert> alerts) {
-        this.alerts = alerts;
-    }
 }
 
