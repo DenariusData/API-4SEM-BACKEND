@@ -21,7 +21,7 @@ public class DetectedIncident {
     private Integer Id;
 
     @ManyToOne
-    @JoinColumn(name = "alert_id")
+    @JoinColumn(name = "ale_id")
     private Alert alert;
 
     @ManyToOne

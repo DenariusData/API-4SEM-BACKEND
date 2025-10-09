@@ -22,11 +22,11 @@ public class AlertLog {
     private Integer Id;
 
     @ManyToOne
-    @JoinColumn(name = "alert_id")
+    @JoinColumn(name = "ale_id")
     private Alert alert;
 
     @ManyToOne
-    @JoinColumn(name = "zone_id")
+    @JoinColumn(name = "reg_id")
     private Region region;
 
     @Column(name = "al_created_at")

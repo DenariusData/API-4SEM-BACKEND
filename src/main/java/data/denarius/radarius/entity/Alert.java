@@ -22,21 +22,10 @@ public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JoinColumn(name = "ale_id")
-    private Integer Id;
-
-    @ManyToOne
-    @JoinColumn(name = "cri_id")
-    private Criterion criterion;
+    private Integer id;
 
     @Column(name = "ale_level")
     private Short level;
-
-    @Column(name = "ale_closed_at")
-    private LocalDateTime closedAt;
-
-    @ManyToOne
-    @JoinColumn(name = "ale_assigned")
-    private Person assigned;
 
     @JoinColumn(name = "ale_message")
     private String message;
@@ -44,30 +33,39 @@ public class Alert {
     @JoinColumn(name = "ale_conclusion")
     private String conclusion;
 
-    @ManyToOne
-    @JoinColumn(name = "ale_camera_id")
-    private Camera camera;
-
-    @Column(name = "ale_created_at")
-    private LocalDateTime createdAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "ale_source_type")
     private SourceTypeEnum sourceType;
 
-    @OneToMany(mappedBy = "ale_alert")
-    private List<DetectedIncident> incidents;
+    @Column(name = "ale_created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "ale_closed_at")
+    private LocalDateTime closedAt;
 
     @ManyToOne
     @JoinColumn(name = "ale_created_by")
     private Person createdBy;
 
-    @OneToOne
-    @JoinColumn(name = "ale_root_cause")
+    @ManyToOne
+    @JoinColumn(name = "ale_assigned_to")
+    private Person assignedTo;
+
+    @ManyToOne
+    @JoinColumn(name = "cam_id")
+    private Camera camera;
+
+    @ManyToOne
+    @JoinColumn(name = "cri_id")
+    private Criterion criterion;
+
+    @ManyToOne
+    @JoinColumn(name = "rc_id")
     private RootCause rootCause;
 
-    @OneToMany(mappedBy = "ale_alert")
+    @OneToMany(mappedBy = "alert")
+    private List<DetectedIncident> incidents;
+
+    @OneToMany(mappedBy = "alert")
     private List<AlertLog> logs;
-
-
 }
