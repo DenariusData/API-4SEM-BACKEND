@@ -27,7 +27,8 @@ public class RootCause {
     @JoinColumn(name = "rc_created_at")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "created_by")
+    @OneToOne(mappedBy = "rc_created_by")
+    @JoinColumn(name = "rc_created_by")
     private Person person;
 
     @ManyToOne

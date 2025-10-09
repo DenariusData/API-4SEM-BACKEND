@@ -21,8 +21,8 @@ public class Camera {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JoinColumn(name = "cam_id")
-    private Integer Id;
+    @Column(name = "cam_id")
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "zone_id")

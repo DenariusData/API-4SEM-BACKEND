@@ -13,7 +13,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Table(name = "criterion")
 public class Criterion {
 
@@ -29,14 +28,12 @@ public class Criterion {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "cri_created_by")
     private Person createdBy;
 
     @OneToMany(mappedBy = "criterion")
-    private List<CriterionLevel> levels;
+    private List<CriterionLevel> criterionLevels;
 
     @OneToMany(mappedBy = "criterion")
     private List<Alert> alerts;
-
-
 }

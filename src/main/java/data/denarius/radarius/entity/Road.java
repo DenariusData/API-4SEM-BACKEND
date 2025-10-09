@@ -19,7 +19,8 @@ public class Road {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer Id;
+    @Column(name = "roa_id")
+    private Integer id;
 
     @Column(name = "roa_address")
     private String address;
@@ -33,7 +34,7 @@ public class Road {
     @Column(name = "roa_updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "camera")
+    @OneToMany(mappedBy = "road")
     private List<Camera> cameras;
 
 }

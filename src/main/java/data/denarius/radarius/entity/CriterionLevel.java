@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Table(name = "criterion_level")
 public class CriterionLevel {
 
@@ -22,7 +21,7 @@ public class CriterionLevel {
     private Integer Id;
 
     @ManyToOne
-    @JoinColumn(name = "criterion_id")
+    @JoinColumn(name = "cri_id")
     private Criterion criterion;
 
     @Column(name = "cl_level")
