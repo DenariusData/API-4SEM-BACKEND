@@ -30,7 +30,8 @@ public class RootCause {
     @OneToOne(mappedBy = "created_by")
     private Person person;
 
-    @OneToOne(mappedBy = "protocol")
+    @ManyToOne
+    @JoinColumn(name = "pro_id")
     private Protocol protocol;
 
 }
