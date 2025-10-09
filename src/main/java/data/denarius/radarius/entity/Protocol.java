@@ -27,6 +27,9 @@ public class Protocol {
     @Column(name = "pro_created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "pro_description")
+    private String description;
+
     @ManyToOne
     @JoinColumn(name = "pro_created_by")
     private Person createdBy;
