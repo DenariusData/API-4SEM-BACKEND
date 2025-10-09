@@ -16,15 +16,15 @@ import java.time.LocalDateTime;
 public class Region {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "reg_id")
+    @Column(name = "reg_id")
     private Integer id;
 
-    @JoinColumn(name = "reg_name")
+    @Column(name = "reg_name")
     private String name;
 
-    @JoinColumn(name = "reg_created_at")
+    @Column(name = "reg_created_at")
     private LocalDateTime createdAt;
 
-    @JoinColumn(name = "reg_updated_at")
+    @Column(name = "reg_updated_at")
     private LocalDateTime updatedAt;
 }

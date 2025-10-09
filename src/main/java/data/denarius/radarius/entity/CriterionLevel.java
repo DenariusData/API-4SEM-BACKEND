@@ -17,12 +17,8 @@ public class CriterionLevel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "cl_id")
+    @Column(name = "cl_id")
     private Integer id;
-
-    @ManyToOne
-    @JoinColumn(name = "cri_id")
-    private Criterion criterion;
 
     @Column(name = "cl_level")
     private Short level;
@@ -31,8 +27,10 @@ public class CriterionLevel {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "cl_created_by")
     private Person createdBy;
 
-
+    @ManyToOne
+    @JoinColumn(name = "cri_id")
+    private Criterion criterion;
 }

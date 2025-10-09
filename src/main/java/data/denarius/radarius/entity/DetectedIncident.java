@@ -17,20 +17,21 @@ public class DetectedIncident {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "di_id")
+    @Column(name = "di_id")
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "ale_id")
-    private Alert alert;
-
-    @ManyToOne
-    @JoinColumn(name = "created_by")
-    private Person createdBy;
-
-    @JoinColumn(name = "di_incident_type")
+    @Column(name = "di_incident_type")
     private String incidentType;
 
     @Column(name = "di_created_at")
     private LocalDateTime createdAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "di_created_by")
+    private Person createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "ale_id")
+    private Alert alert;
 }

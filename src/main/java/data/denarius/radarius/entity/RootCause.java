@@ -15,16 +15,16 @@ import java.time.LocalDateTime;
 public class RootCause {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "rc_id")
+    @Column(name = "rc_id")
     private Integer id;
 
-    @JoinColumn(name = "rc_name")
+    @Column(name = "rc_name")
     private String name;
 
-    @JoinColumn(name = "rc_description")
+    @Column(name = "rc_description")
     private String description;
 
-    @JoinColumn(name = "rc_created_at")
+    @Column(name = "rc_created_at")
     private LocalDateTime createdAt;
 
     @ManyToOne
@@ -34,5 +34,4 @@ public class RootCause {
     @ManyToOne
     @JoinColumn(name = "pro_id")
     private Protocol protocol;
-
 }

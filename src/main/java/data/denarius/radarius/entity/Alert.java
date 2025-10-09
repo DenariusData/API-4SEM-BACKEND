@@ -21,16 +21,16 @@ public class Alert {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "ale_id")
+    @Column(name = "ale_id")
     private Integer id;
 
     @Column(name = "ale_level")
     private Short level;
 
-    @JoinColumn(name = "ale_message")
+    @Column(name = "ale_message")
     private String message;
 
-    @JoinColumn(name = "ale_conclusion")
+    @Column(name = "ale_conclusion")
     private String conclusion;
 
     @Enumerated(EnumType.STRING)

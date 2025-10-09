@@ -22,15 +22,11 @@ public class Reading {
     @Column(name = "rea_id")
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "rea_camera_id")
-    private Camera camera;
-
     @Column(name = "rea_created_at")
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "vehicle_type")
+    @Column(name = "rea_vehicle_type")
     private VehicleTypeEnum vehicleType;
 
     @Column(name = "rea_speed")
@@ -39,5 +35,7 @@ public class Reading {
     @Column(name = "rea_plate")
     private String plate;
 
-
+    @ManyToOne
+    @JoinColumn(name = "cam_id")
+    private Camera camera;
 }

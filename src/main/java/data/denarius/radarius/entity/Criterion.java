@@ -18,7 +18,7 @@ public class Criterion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "cri_id")
+    @Column(name = "cri_id")
     private Integer id;
 
     @Column(name = "cri_name")

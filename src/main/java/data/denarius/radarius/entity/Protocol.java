@@ -18,7 +18,7 @@ public class Protocol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "pro_id")
+    @Column(name = "pro_id")
     private Integer id;
 
     @Column(name = "pro_name")

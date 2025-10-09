@@ -24,14 +24,6 @@ public class Camera {
     @Column(name = "cam_id")
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "reg_id")
-    private Region region;
-
-    @ManyToOne
-    @JoinColumn(name = "roa_id")
-    private Road road;
-
     @Column(name = "cam_latitude")
     private BigDecimal latitude;
 
@@ -53,5 +45,11 @@ public class Camera {
     @OneToMany(mappedBy = "camera")
     private List<Alert> alerts;
 
+    @ManyToOne
+    @JoinColumn(name = "reg_id")
+    private Region region;
 
+    @ManyToOne
+    @JoinColumn(name = "roa_id")
+    private Road road;
 }

@@ -16,23 +16,23 @@ import java.time.LocalDateTime;
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @JoinColumn(name = "per_id")
+    @Column(name = "per_id")
     private Integer id;
 
-    @JoinColumn(name = "per_name")
+    @Column(name = "per_name")
     private String name;
 
-    @JoinColumn(name = "per_whatsapp")
+    @Column(name = "per_whatsapp")
     private String whatsapp;
 
-    @JoinColumn(name = "per_email")
+    @Column(name = "per_email")
     private String email;
 
-    @JoinColumn(name = "per_password")
+    @Column(name = "per_password")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @JoinColumn(name = "per_role")
+    @Column(name = "per_role")
     private RoleEnum role;
 
     @Column(name = "per_created_at")

@@ -16,7 +16,7 @@ spring:
       shared: true
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
 cors:
   allowed-origins: "*"
