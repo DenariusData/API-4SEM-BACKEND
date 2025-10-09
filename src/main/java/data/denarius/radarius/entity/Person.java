@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Person {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "per_id")
-    private Integer Id;
+    private Integer id;
 
     @JoinColumn(name = "per_name")
     private String name;

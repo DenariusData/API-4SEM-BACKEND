@@ -20,7 +20,7 @@ import java.util.List;
 public class Camera {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "cam_id")
     private Integer id;
 
@@ -47,10 +47,10 @@ public class Camera {
     @Column(name = "cam_updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "reading")
+    @OneToMany(mappedBy = "camera")
     private List<Reading> readings;
 
-    @OneToMany(mappedBy = "alert")
+    @OneToMany(mappedBy = "camera")
     private List<Alert> alerts;
 
 

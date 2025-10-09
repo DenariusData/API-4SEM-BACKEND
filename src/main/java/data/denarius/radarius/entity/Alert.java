@@ -20,7 +20,7 @@ import java.util.List;
 public class Alert {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "ale_id")
     private Integer id;
 

@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 public class DetectedIncident {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "di_id")
-    private Integer Id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "ale_id")

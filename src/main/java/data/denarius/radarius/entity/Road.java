@@ -18,7 +18,7 @@ import java.util.List;
 public class Road {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "roa_id")
     private Integer id;
 

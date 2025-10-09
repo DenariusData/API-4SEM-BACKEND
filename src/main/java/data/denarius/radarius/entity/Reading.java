@@ -18,8 +18,9 @@ import java.time.LocalDateTime;
 public class Reading {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer Id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "rea_id")
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "rea_camera_id")

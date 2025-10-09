@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "root_cause")
 public class RootCause {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "rc_id")
     private Integer id;
 

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "region")
 public class Region {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "reg_id")
     private Integer id;
 

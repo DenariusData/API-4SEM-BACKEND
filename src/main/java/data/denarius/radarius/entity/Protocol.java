@@ -17,9 +17,9 @@ import java.util.List;
 public class Protocol {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "pro_id")
-    private Integer Id;
+    private Integer id;
 
     @Column(name = "pro_name")
     private String name;

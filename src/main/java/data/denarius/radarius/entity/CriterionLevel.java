@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 public class CriterionLevel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "cl_id")
-    private Integer Id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "cri_id")

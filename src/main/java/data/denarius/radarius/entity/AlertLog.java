@@ -17,9 +17,9 @@ import java.time.LocalDateTime;
 public class AlertLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @JoinColumn(name = "al_id")
-    private Integer Id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "ale_id")
