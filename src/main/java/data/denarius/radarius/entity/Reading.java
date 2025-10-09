@@ -2,76 +2,40 @@ package data.denarius.radarius.entity;
 
 import data.denarius.radarius.enums.VehicleTypeEnum;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "reading")
 public class Reading {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer readingId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "rea_id")
+    private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "camera_id")
-    private Camera camera;
-
-    private OffsetDateTime timestamp;
+    @Column(name = "rea_created_at")
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "vehicle_type")
+    @Column(name = "rea_vehicle_type")
     private VehicleTypeEnum vehicleType;
 
+    @Column(name = "rea_speed")
     private BigDecimal speed;
 
+    @Column(name = "rea_plate")
     private String plate;
 
-    public Integer getReadingId() {
-        return readingId;
-    }
-
-    public void setReadingId(Integer readingId) {
-        this.readingId = readingId;
-    }
-
-    public Camera getCamera() {
-        return camera;
-    }
-
-    public void setCamera(Camera camera) {
-        this.camera = camera;
-    }
-
-    public OffsetDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(OffsetDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public VehicleTypeEnum getVehicleType() {
-        return vehicleType;
-    }
-
-    public void setVehicleType(VehicleTypeEnum vehicleType) {
-        this.vehicleType = vehicleType;
-    }
-
-    public BigDecimal getSpeed() {
-        return speed;
-    }
-
-    public void setSpeed(BigDecimal speed) {
-        this.speed = speed;
-    }
-
-    public String getPlate() {
-        return plate;
-    }
-
-    public void setPlate(String plate) {
-        this.plate = plate;
-    }
+    @ManyToOne
+    @JoinColumn(name = "cam_id")
+    private Camera camera;
 }

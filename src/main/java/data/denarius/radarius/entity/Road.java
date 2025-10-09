@@ -1,82 +1,40 @@
 package data.denarius.radarius.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "road")
 public class Road {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer roadId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "roa_id")
+    private Integer id;
 
+    @Column(name = "roa_address")
     private String address;
 
-    @Column(name = "speed_limit")
+    @Column(name = "roa_speed_limit")
     private BigDecimal speedLimit;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private OffsetDateTime createdAt;
+    @Column(name = "roa_created_at")
+    private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "update_at")
-    private OffsetDateTime updatedAt;
+    @Column(name = "roa_updated_at")
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "road")
     private List<Camera> cameras;
 
-    public Integer getRoadId() {
-        return roadId;
-    }
-
-    public void setRoadId(Integer roadId) {
-        this.roadId = roadId;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public BigDecimal getSpeedLimit() {
-        return speedLimit;
-    }
-
-    public void setSpeedLimit(BigDecimal speedLimit) {
-        this.speedLimit = speedLimit;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public List<Camera> getCameras() {
-        return cameras;
-    }
-
-    public void setCameras(List<Camera> cameras) {
-        this.cameras = cameras;
-    }
 }

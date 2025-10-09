@@ -2,42 +2,39 @@ package data.denarius.radarius.entity;
 
 import data.denarius.radarius.enums.RoleEnum;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "person")
 @Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Person {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer personId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "per_id")
+    private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "per_name")
     private String name;
 
+    @Column(name = "per_whatsapp")
     private String whatsapp;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "per_email")
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "per_password")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private RoleEnum role = RoleEnum.ROLE_CIVIL;
+    @Column(name = "per_role")
+    private RoleEnum role;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private OffsetDateTime createdAt;
+    @Column(name = "per_created_at")
+    private LocalDateTime createdAt;
 }
