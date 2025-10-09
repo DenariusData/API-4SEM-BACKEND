@@ -25,12 +25,8 @@ public class Alert {
     private Integer Id;
 
     @ManyToOne
-    @JoinColumn(name = "ale_criterion_id")
+    @JoinColumn(name = "cri_id")
     private Criterion criterion;
-
-    @ManyToOne
-    @JoinColumn(name = "ale_protocol_id")
-    private Protocol protocol;
 
     @Column(name = "ale_level")
     private Short level;

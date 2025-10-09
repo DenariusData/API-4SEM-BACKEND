@@ -21,9 +21,6 @@ public class Protocol {
     @JoinColumn(name = "pro_id")
     private Integer Id;
 
-    @OneToOne(mappedBy = "root_cause")
-    private Protocol rootCause;
-
     @Column(name = "pro_name")
     private String name;
 
@@ -31,11 +28,10 @@ public class Protocol {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "pro_created_by")
     private Person createdBy;
 
-    @OneToMany(mappedBy = "alert")
-    private List<Alert> alerts;
-
+    @OneToMany(mappedBy = "protocol")
+    private List<RootCause> rootCauses;
 }
 
