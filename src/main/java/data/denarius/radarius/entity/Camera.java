@@ -1,33 +1,43 @@
 package data.denarius.radarius.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+
 import java.util.List;
 
+
 @Entity
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "camera")
 public class Camera {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer cameraId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "cam_id")
+    private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "road_id")
-    private Road road;
-
+    @Column(name = "cam_latitude")
     private BigDecimal latitude;
 
+    @Column(name = "cam_longitude")
     private BigDecimal longitude;
 
+    @Column(name = "cam_active")
     private Boolean active;
 
-    @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    @Column(name = "cam_created_at")
+    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    @Column(name = "cam_updated_at")
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "camera")
     private List<Reading> readings;
@@ -35,75 +45,11 @@ public class Camera {
     @OneToMany(mappedBy = "camera")
     private List<Alert> alerts;
 
-    public Integer getCameraId() {
-        return cameraId;
-    }
+    @ManyToOne
+    @JoinColumn(name = "reg_id")
+    private Region region;
 
-    public void setCameraId(Integer cameraId) {
-        this.cameraId = cameraId;
-    }
-
-    public Road getRoad() {
-        return road;
-    }
-
-    public void setRoad(Road road) {
-        this.road = road;
-    }
-
-    public BigDecimal getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(BigDecimal latitude) {
-        this.latitude = latitude;
-    }
-
-    public BigDecimal getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(BigDecimal longitude) {
-        this.longitude = longitude;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public List<Reading> getReadings() {
-        return readings;
-    }
-
-    public void setReadings(List<Reading> readings) {
-        this.readings = readings;
-    }
-
-    public List<Alert> getAlerts() {
-        return alerts;
-    }
-
-    public void setAlerts(List<Alert> alerts) {
-        this.alerts = alerts;
-    }
+    @ManyToOne
+    @JoinColumn(name = "roa_id")
+    private Road road;
 }

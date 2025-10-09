@@ -20,7 +20,7 @@ public class CustomUserDetailService implements UserDetailsService {
                 new UsernameNotFoundException("User not found with email: " + email));
         return UserPrincipal
                 .builder()
-                .userId(person.getUserId())
+                .userId(person.getId())
                 .email(person.getEmail())
                 .password(person.getPassword())
                 .build();
