@@ -27,7 +27,7 @@ public class AlertLog {
 
     @ManyToOne
     @JoinColumn(name = "zone_id")
-    private Zone zone;
+    private Region region;
 
     @Column(name = "al_created_at")
     private LocalDateTime createdAt;

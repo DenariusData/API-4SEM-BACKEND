@@ -25,11 +25,11 @@ public class Camera {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "zone_id")
-    private Zone zone;
+    @JoinColumn(name = "reg_id")
+    private Region region;
 
     @ManyToOne
-    @JoinColumn(name = "road_id")
+    @JoinColumn(name = "roa_id")
     private Road road;
 
     @Column(name = "cam_latitude")
