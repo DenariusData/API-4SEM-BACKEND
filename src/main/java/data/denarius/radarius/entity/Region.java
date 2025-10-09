@@ -12,19 +12,19 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "zone")
-public class Zone {
+@Table(name = "region")
+public class Region {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JoinColumn(name = "zon_id")
+    @JoinColumn(name = "reg_id")
     private Integer id;
 
-    @JoinColumn(name = "zon_name")
+    @JoinColumn(name = "reg_name")
     private String name;
 
-    @JoinColumn(name = "zon_created_at")
+    @JoinColumn(name = "reg_created_at")
     private LocalDateTime createdAt;
 
-    @JoinColumn(name = "zon_updated_at")
+    @JoinColumn(name = "reg_updated_at")
     private LocalDateTime updatedAt;
 }
