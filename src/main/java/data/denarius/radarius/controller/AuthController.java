@@ -1,4 +1,4 @@
-package data.denarius.radarius.controllers;
+package data.denarius.radarius.controller;
 
 import data.denarius.radarius.dto.login.LoginRequestDTO;
 import data.denarius.radarius.dto.login.LoginResponseDTO;

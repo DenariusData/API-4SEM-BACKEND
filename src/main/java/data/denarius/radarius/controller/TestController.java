@@ -1,4 +1,4 @@
-package data.denarius.radarius.controllers;
+package data.denarius.radarius.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
