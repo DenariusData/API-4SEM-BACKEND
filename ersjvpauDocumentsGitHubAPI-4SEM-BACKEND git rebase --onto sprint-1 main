@@ -1,4 +1,4 @@
-[33mceb23af[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mRAD-36/development-of-controllers-repositories-and-services[m[33m, [m[1;31morigin/sprint-1[m[33m, [m[1;31morigin/RAD-36/development-of-controllers-repositories-and-services[m[33m, [m[1;32msprint-1[m[33m, [m[1;32mRAD-36/development-of-controllers-repositories-and-service[m[33m)[m feat: Merge pull request #3 from DenariusData/RAD-35/create-entities
+[33mceb23af[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mRAD-36/development-of-controller-repositories-and-services[m[33m, [m[1;31morigin/sprint-1[m[33m, [m[1;31morigin/RAD-36/development-of-controller-repositories-and-services[m[33m, [m[1;32msprint-1[m[33m, [m[1;32mRAD-36/development-of-controller-repositories-and-service[m[33m)[m feat: Merge pull request #3 from DenariusData/RAD-35/create-entities
 [33m731eab2[m[33m ([m[1;31morigin/RAD-35/create-entities[m[33m)[m fix: change the language of the table annotations
 [33m1cb10f7[m feat: create Road entity
 [33ma35fc74[m feat: create Reading entity

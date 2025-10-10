@@ -1,6 +1,5 @@
 package data.denarius.radarius.entity;
 
-
 import data.denarius.radarius.enums.SourceTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
