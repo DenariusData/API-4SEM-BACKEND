@@ -86,7 +86,6 @@ public class CameraServiceImpl implements CameraService {
         dto.setCreatedAt(camera.getCreatedAt());
         dto.setUpdatedAt(camera.getUpdatedAt());
         dto.setRegionName(camera.getRegion() != null ? camera.getRegion().getName() : null);
-        dto.setRoadName(camera.getRoad() != null ? camera.getRoad().getName() : null);
         return dto;
     }
 }

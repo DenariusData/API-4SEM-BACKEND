@@ -79,8 +79,6 @@ public class ReadingServiceImpl implements ReadingService {
         dto.setPlate(reading.getPlate());
         dto.setCameraRegion(reading.getCamera() != null && reading.getCamera().getRegion() != null
                 ? reading.getCamera().getRegion().getName() : null);
-        dto.setCameraRoad(reading.getCamera() != null && reading.getCamera().getRoad() != null
-                ? reading.getCamera().getRoad().getName() : null);
         return dto;
     }
 }

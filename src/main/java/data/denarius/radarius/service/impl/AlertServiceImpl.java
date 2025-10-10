@@ -100,7 +100,6 @@ public class AlertServiceImpl implements AlertService {
         dto.setClosedAt(alert.getClosedAt());
         dto.setCreatedByName(alert.getCreatedBy() != null ? alert.getCreatedBy().getName() : null);
         dto.setAssignedToName(alert.getAssignedTo() != null ? alert.getAssignedTo().getName() : null);
-        dto.setCameraName(alert.getCamera() != null ? alert.getCamera().getName() : null);
         dto.setCriterionName(alert.getCriterion() != null ? alert.getCriterion().getName() : null);
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
         return dto;
