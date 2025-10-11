@@ -16,11 +16,11 @@ import java.util.List;
 public interface AlertRepository extends JpaRepository<Alert, Integer> {
 
     @Query("""
-        SELECT a
-        FROM Alert a
-        WHERE a.camera.region.id = :regionId
-        ORDER BY a.createdAt DESC
-        """)
+    SELECT al
+    FROM AlertLog al
+    WHERE al.region.id = :regionId
+    ORDER BY al.id DESC
+""")
     List<Alert> findTop10ByRegion(@Param("regionId") Integer regionId, Pageable pageable);
 
     @Query("""
