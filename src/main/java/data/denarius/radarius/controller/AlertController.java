@@ -4,9 +4,11 @@ import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.service.AlertService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -40,5 +42,24 @@ public class AlertController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         alertService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/last10")
+    public ResponseEntity<List<AlertResponseDTO>> getLast10ByRegion(@RequestParam Integer regionId) {
+        return ResponseEntity.ok(alertService.getLast10AlertsByRegion(regionId));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<AlertResponseDTO>> getWithFilters(
+            @RequestParam(required = false) Integer regionId,
+            @RequestParam(required = false) Integer cameraId,
+            @RequestParam(required = false) String startDate, // ISO String
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        LocalDateTime start = startDate != null ? LocalDateTime.parse(startDate) : null;
+        LocalDateTime end = endDate != null ? LocalDateTime.parse(endDate) : null;
+        return ResponseEntity.ok(alertService.getAlertsWithFilters(regionId, cameraId, start, end, page, size));
     }
 }
