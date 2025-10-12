@@ -44,7 +44,7 @@ public class AlertController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/last10")
+    @GetMapping("/last-ten")
     public ResponseEntity<List<AlertResponseDTO>> getLast10ByRegion(@RequestParam Integer regionId) {
         return ResponseEntity.ok(alertService.getLast10AlertsByRegion(regionId));
     }
