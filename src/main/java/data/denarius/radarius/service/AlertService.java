@@ -21,7 +21,7 @@ public interface AlertService {
     List<AlertResponseDTO> getLast10AlertsByRegion(Integer regionId);
 
     Page<AlertResponseDTO> getAlertsWithFilters(
-            Integer regionId,
+            List<Integer> regionIds,
             Integer cameraId,
             LocalDateTime startDate,
             LocalDateTime endDate,

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,7 +76,7 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public Page<AlertResponseDTO> getAlertsWithFilters(
-            Integer regionId,
+            List<Integer> regionIds,
             Integer cameraId,
             LocalDateTime startDate,
             LocalDateTime endDate,
@@ -83,9 +84,11 @@ public class AlertServiceImpl implements AlertService {
             int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Alert> alerts = alertRepository.findWithFilters(regionId, cameraId, startDate, endDate, pageable);
+        List<Integer> regionIdsParam = (regionIds == null) ? null : regionIds;
+        Page<Alert> alerts = alertRepository.findWithFilters(regionIdsParam, cameraId, startDate, endDate, pageable);
         return alerts.map(this::mapToDTO);
     }
+
 
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();

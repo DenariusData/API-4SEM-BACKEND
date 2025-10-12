@@ -28,14 +28,14 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     SELECT DISTINCT a
     FROM Alert a
     LEFT JOIN a.logs al
-    WHERE (:regionId IS NULL OR al.region.id = :regionId)
+    WHERE (:regionIds IS NULL OR al.region.id IN :regionIds)
     AND (:cameraId IS NULL OR a.camera.id = :cameraId)
     AND (:startDate IS NULL OR a.createdAt >= :startDate)
     AND (:endDate IS NULL OR a.createdAt <= :endDate)
     ORDER BY a.createdAt DESC
     """)
     Page<Alert> findWithFilters(
-            @Param("regionId") Integer regionId,
+            @Param("regionIds") List<Integer> regionIds,
             @Param("cameraId") Integer cameraId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
