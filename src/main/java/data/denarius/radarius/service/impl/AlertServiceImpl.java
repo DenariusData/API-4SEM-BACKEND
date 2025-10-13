@@ -7,8 +7,14 @@ import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.AlertService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,6 +64,31 @@ public class AlertServiceImpl implements AlertService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<AlertResponseDTO> getLast10AlertsByRegion(Integer regionId) {
+        Pageable pageable = PageRequest.of(0, 10);
+        return alertRepository.findTop10ByRegion(regionId, pageable)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<AlertResponseDTO> getAlertsWithFilters(
+            List<Integer> regionIds,
+            Integer cameraId,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        List<Integer> regionIdsParam = (regionIds == null) ? null : regionIds;
+        Page<Alert> alerts = alertRepository.findWithFilters(regionIdsParam, cameraId, startDate, endDate, pageable);
+        return alerts.map(this::mapToDTO);
+    }
+
 
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
