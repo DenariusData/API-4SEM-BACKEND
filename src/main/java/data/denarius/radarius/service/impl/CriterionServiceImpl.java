@@ -54,6 +54,24 @@ public class CriterionServiceImpl implements CriterionService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<CriterionResponseDTO> getCriteriaSummary() {
+        return criterionRepository.findAll()
+                .stream()
+                .map(this::mapToSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    private CriterionResponseDTO mapToSummaryDTO(Criterion criterion) {
+        CriterionResponseDTO dto = new CriterionResponseDTO();
+        dto.setId(criterion.getId());
+        dto.setName(criterion.getName());
+        dto.setDescription(criterion.getDescription());
+        dto.setExample(criterion.getExample());
+        dto.setMathExpression(criterion.getMathExpression());
+        return dto;
+    }
+
     private Criterion mapToEntity(CriterionRequestDTO dto) {
         Criterion criterion = new Criterion();
         updateEntity(criterion, dto);
@@ -62,6 +80,9 @@ public class CriterionServiceImpl implements CriterionService {
 
     private void updateEntity(Criterion criterion, CriterionRequestDTO dto) {
         criterion.setName(dto.getName());
+        criterion.setDescription(dto.getDescription());
+        criterion.setExample(dto.getExample());
+        criterion.setMathExpression(dto.getMathExpression());
         criterion.setCreatedAt(dto.getCreatedAt());
         if (dto.getCreatedById() != null)
             criterion.setCreatedBy(personRepository.findById(dto.getCreatedById()).orElse(null));
@@ -71,6 +92,9 @@ public class CriterionServiceImpl implements CriterionService {
         CriterionResponseDTO dto = new CriterionResponseDTO();
         dto.setId(criterion.getId());
         dto.setName(criterion.getName());
+        dto.setDescription(criterion.getDescription());
+        dto.setExample(criterion.getExample());
+        dto.setMathExpression(criterion.getMathExpression());
         dto.setCreatedAt(criterion.getCreatedAt());
         dto.setCreatedByName(criterion.getCreatedBy() != null ? criterion.getCreatedBy().getName() : null);
         return dto;
