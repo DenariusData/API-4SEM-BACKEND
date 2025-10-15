@@ -11,4 +11,5 @@ public interface CriterionService {
     void delete(Integer id);
     CriterionResponseDTO findById(Integer id);
     List<CriterionResponseDTO> findAll();
+    List<CriterionResponseDTO> getCriteriaSummary();
 }
