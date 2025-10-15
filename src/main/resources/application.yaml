@@ -3,8 +3,8 @@ spring:
     name: radarius
   datasource:
     url: jdbc:oracle:thin:@${TNS_NAME}?TNS_ADMIN=${WALLET_DIR}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    username: DEN_AUGUSTO
+    password: Radarius2025
     driver-class-name: oracle.jdbc.OracleDriver
     type: oracle.ucp.jdbc.PoolDataSourceImpl
     oracleucp:
