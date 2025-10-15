@@ -41,4 +41,9 @@ public class CriterionController {
         criterionService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/summary")
+    public ResponseEntity<List<CriterionResponseDTO>> getCriteriaSummary() {
+        return ResponseEntity.ok(criterionService.getCriteriaSummary());
+    }
 }

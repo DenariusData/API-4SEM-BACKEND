@@ -24,6 +24,15 @@ public class Criterion {
     @Column(name = "cri_name")
     private String name;
 
+    @Column(name = "cri_description")
+    private String description;
+
+    @Column(name = "cri_example")
+    private String example;
+
+    @Column(name = "cri_math_expression")
+    private String mathExpression;
+
     @Column(name = "cri_created_at")
     private LocalDateTime createdAt;
 
