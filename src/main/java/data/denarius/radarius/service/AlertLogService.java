@@ -1,19 +1,16 @@
 package data.denarius.radarius.service;
 
-import data.denarius.radarius.dto.alertlog.AlertLogRequestDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogResponseDTO;
+import data.denarius.radarius.entity.AlertLog;
+import data.denarius.radarius.entity.Criterion;
+import data.denarius.radarius.entity.Region;
 
 import java.util.List;
 
 public interface AlertLogService {
 
-    AlertLogResponseDTO create(AlertLogRequestDTO dto);
-
-    AlertLogResponseDTO update(Integer id, AlertLogRequestDTO dto);
-
+    AlertLog create(Short newLevel, Criterion criterion, Region region);
     void delete(Integer id);
-
     AlertLogResponseDTO findById(Integer id);
-
     List<AlertLogResponseDTO> findAll();
 }

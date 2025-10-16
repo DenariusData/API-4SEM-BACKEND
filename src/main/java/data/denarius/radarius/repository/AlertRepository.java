@@ -11,35 +11,44 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, Integer> {
 
     @Query("""
-    SELECT a
-    FROM Alert a
-    JOIN a.logs al
-    WHERE al.region.id = :regionId
-    ORDER BY al.createdAt DESC
-""")
+        SELECT a
+        FROM Alert a
+        JOIN a.logs al
+        WHERE al.region.id = :regionId
+        ORDER BY al.createdAt DESC
+    """)
     List<Alert> findTop10ByRegion(@Param("regionId") Integer regionId, Pageable pageable);
 
     @Query("""
-    SELECT DISTINCT a
-    FROM Alert a
-    LEFT JOIN a.logs al
-    WHERE (:regionIds IS NULL OR al.region.id IN :regionIds)
-    AND (:cameraId IS NULL OR a.camera.id = :cameraId)
-    AND (:startDate IS NULL OR a.createdAt >= :startDate)
-    AND (:endDate IS NULL OR a.createdAt <= :endDate)
-    ORDER BY a.createdAt DESC
+        SELECT DISTINCT a
+        FROM Alert a
+        LEFT JOIN a.logs al
+        WHERE (:regionIds IS NULL OR al.region.id IN :regionIds)
+        AND (:cameraId IS NULL OR a.camera.id = :cameraId)
+        AND (:startDate IS NULL OR a.createdAt >= :startDate)
+        AND (:endDate IS NULL OR a.createdAt <= :endDate)
+        ORDER BY a.createdAt DESC
     """)
-    Page<Alert> findWithFilters(
-            @Param("regionIds") List<Integer> regionIds,
+    Page<Alert> findWithFilters(@Param("regionIds") List<Integer> regionIds,
             @Param("cameraId") Integer cameraId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
-            Pageable pageable
-    );
+            Pageable pageable);
 
+    @Query("""
+        SELECT DISTINCT a
+        FROM Alert a
+        WHERE a.criterion.id = :criterionId
+        AND a.region.id = :regionId
+        ORDER BY a.createdAt DESC
+        LIMIT 1
+    """)
+    Optional<Alert> findLatestAlertByCriterionAndRegion(@Param("criterionId") Integer criterionId,
+                                           @Param("regionId") Integer regionId);
 }

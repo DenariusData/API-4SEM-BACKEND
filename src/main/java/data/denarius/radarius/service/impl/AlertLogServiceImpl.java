@@ -1,8 +1,10 @@
 package data.denarius.radarius.service.impl;
 
-import data.denarius.radarius.dto.alertlog.AlertLogRequestDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogResponseDTO;
+import data.denarius.radarius.entity.Alert;
 import data.denarius.radarius.entity.AlertLog;
+import data.denarius.radarius.entity.Criterion;
+import data.denarius.radarius.entity.Region;
 import data.denarius.radarius.repository.AlertLogRepository;
 import data.denarius.radarius.repository.AlertRepository;
 import data.denarius.radarius.repository.RegionRepository;
@@ -11,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,17 +28,39 @@ public class AlertLogServiceImpl implements AlertLogService {
     private RegionRepository regionRepository;
 
     @Override
-    public AlertLogResponseDTO create(AlertLogRequestDTO dto) {
-        AlertLog alertLog = mapToEntity(dto);
-        return mapToDTO(alertLogRepository.save(alertLog));
-    }
+    public AlertLog create(Short newLevel, Criterion criterion, Region region) {
+        AlertLog newAlertLog = AlertLog.builder()
+                .region(region)
+                .criterion(criterion)
+                .newLevel(newLevel)
+                .createdAt(LocalDateTime.now())
+                .build();
 
-    @Override
-    public AlertLogResponseDTO update(Integer id, AlertLogRequestDTO dto) {
-        AlertLog alertLog = alertLogRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("AlertLog não encontrado"));
-        updateEntity(alertLog, dto);
-        return mapToDTO(alertLogRepository.save(alertLog));
+        AlertLog previousAlertLog = alertLogRepository.findLatestByRegion(region.getId())
+                .orElse(null);
+
+        Alert alert = alertRepository.findLatestAlertByCriterionAndRegion(criterion.getId(), region.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Alert não encontrado para o critério e região fornecidos"));
+
+        if (alert.getClosedAt() == null) newAlertLog.setAlert(alert);
+
+        if (previousAlertLog != null) {
+            newAlertLog.setPreviousLevel(previousAlertLog.getNewLevel());
+            if (newAlertLog.getPreviousLevel() < newAlertLog.getNewLevel()) {
+                alertRepository.save(Alert.builder()
+                    .message("Queda de nível na região " +
+                        region.getName() +
+                        " para o critério " +
+                        criterion.getName())
+                    .level(newLevel)
+                    .createdAt(LocalDateTime.now())
+                    .region(region)
+                    .criterion(criterion)
+                    .build()
+                );
+            }
+        }
+        return alertLogRepository.save(newAlertLog);
     }
 
     @Override
@@ -55,25 +80,6 @@ public class AlertLogServiceImpl implements AlertLogService {
         return alertLogRepository.findAll().stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
-    }
-
-    private AlertLog mapToEntity(AlertLogRequestDTO dto) {
-        AlertLog alertLog = new AlertLog();
-        updateEntity(alertLog, dto);
-        return alertLog;
-    }
-
-    private void updateEntity(AlertLog alertLog, AlertLogRequestDTO dto) {
-        alertLog.setCreatedAt(dto.getCreatedAt());
-        alertLog.setPreviousLevel(dto.getPreviousLevel());
-        alertLog.setNewLevel(dto.getNewLevel());
-        alertLog.setClosedAt(dto.getClosedAt());
-
-        if (dto.getAlertId() != null)
-            alertLog.setAlert(alertRepository.findById(dto.getAlertId()).orElse(null));
-
-        if (dto.getRegionId() != null)
-            alertLog.setRegion(regionRepository.findById(dto.getRegionId()).orElse(null));
     }
 
     private AlertLogResponseDTO mapToDTO(AlertLog alertLog) {
