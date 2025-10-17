@@ -69,6 +69,7 @@ public class WebSecurityConfig {
                     "/v3/api-docs/**",
                     "/auth/login"
                 ).permitAll()
+                .requestMatchers("/**").permitAll() // TODO: remove after login
                 .requestMatchers("/api-test/secured")
                     .authenticated()
                 .anyRequest().authenticated()
