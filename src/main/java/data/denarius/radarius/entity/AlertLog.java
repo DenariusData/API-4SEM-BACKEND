@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Data
 @Getter
 @Setter
 @Builder
@@ -40,4 +39,8 @@ public class AlertLog {
     @ManyToOne
     @JoinColumn(name = "reg_id")
     private Region region;
+
+    @ManyToOne
+    @JoinColumn(name = "cri_id")
+    private Criterion criterion;
 }

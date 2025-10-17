@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
 @Getter
 @Setter
 @Builder
@@ -67,4 +66,8 @@ public class Alert {
 
     @OneToMany(mappedBy = "alert")
     private List<AlertLog> logs;
+
+    @ManyToOne
+    @JoinColumn(name = "reg_id")
+    private Region region;
 }

@@ -71,6 +71,7 @@ public class WebSecurityConfig {
                     "/criteria/**",
                     "/criterion-levels/**"
                 ).permitAll()
+                .requestMatchers("/**").permitAll() // TODO: remove after login
                 .requestMatchers("/api-test/secured")
                     .authenticated()
                 .anyRequest().authenticated()
