@@ -11,4 +11,5 @@ public interface CriterionLevelService {
     void delete(Integer id);
     CriterionLevelResponseDTO findById(Integer id);
     List<CriterionLevelResponseDTO> findAll();
+    List<CriterionLevelResponseDTO> findByCriterionId(Integer criterionId);
 }

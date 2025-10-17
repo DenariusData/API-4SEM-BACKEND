@@ -57,6 +57,13 @@ public class CriterionLevelServiceImpl implements CriterionLevelService {
                 .collect(Collectors.toList());
     }
 
+        @Override
+        public List<CriterionLevelResponseDTO> findByCriterionId(Integer criterionId) {
+            return criterionLevelRepository.findByCriterion_Id(criterionId).stream()
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+        }
+
     private CriterionLevel mapToEntity(CriterionLevelRequestDTO dto) {
         CriterionLevel cl = new CriterionLevel();
         updateEntity(cl, dto);
