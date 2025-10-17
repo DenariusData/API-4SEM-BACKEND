@@ -36,30 +36,32 @@ public class AlertLogServiceImpl implements AlertLogService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        AlertLog previousAlertLog = alertLogRepository.findLatestByRegion(region.getId())
+        AlertLog previousAlertLog = alertLogRepository.findLatestByCriterionAndRegion(criterion.getId(), region.getId())
                 .orElse(null);
+        Short previousLevel = previousAlertLog == null ? 1 : previousAlertLog.getNewLevel();
+        newAlertLog.setPreviousLevel(previousLevel);
 
         Alert alert = alertRepository.findLatestAlertByCriterionAndRegion(criterion.getId(), region.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Alert não encontrado para o critério e região fornecidos"));
+                .orElse(null);
 
-        if (alert.getClosedAt() == null) newAlertLog.setAlert(alert);
-
-        if (previousAlertLog != null) {
-            newAlertLog.setPreviousLevel(previousAlertLog.getNewLevel());
-            if (newAlertLog.getPreviousLevel() < newAlertLog.getNewLevel()) {
-                alertRepository.save(Alert.builder()
-                    .message("Queda de nível na região " +
-                        region.getName() +
-                        " para o critério " +
-                        criterion.getName())
-                    .level(newLevel)
-                    .createdAt(LocalDateTime.now())
-                    .region(region)
-                    .criterion(criterion)
-                    .build()
+        if (alert != null) {
+            if (alert.getClosedAt() == null) newAlertLog.setAlert(alert);
+            else if (newAlertLog.getNewLevel() > newAlertLog.getPreviousLevel() && previousAlertLog != null) {
+                Alert newAlert = alertRepository.save(Alert.builder()
+                        .message("Queda de nível na região " +
+                                region.getName() +
+                                " para o critério " +
+                                criterion.getName())
+                        .level(newLevel)
+                        .createdAt(LocalDateTime.now())
+                        .region(region)
+                        .criterion(criterion)
+                        .build()
                 );
+                newAlertLog.setAlert(newAlert);
             }
         }
+
         return alertLogRepository.save(newAlertLog);
     }
 
@@ -69,28 +71,13 @@ public class AlertLogServiceImpl implements AlertLogService {
     }
 
     @Override
-    public AlertLogResponseDTO findById(Integer id) {
+    public AlertLog findById(Integer id) {
         return alertLogRepository.findById(id)
-                .map(this::mapToDTO)
                 .orElseThrow(() -> new EntityNotFoundException("AlertLog não encontrado"));
     }
 
     @Override
-    public List<AlertLogResponseDTO> findAll() {
-        return alertLogRepository.findAll().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    private AlertLogResponseDTO mapToDTO(AlertLog alertLog) {
-        AlertLogResponseDTO dto = new AlertLogResponseDTO();
-        dto.setId(alertLog.getId());
-        dto.setCreatedAt(alertLog.getCreatedAt());
-        dto.setPreviousLevel(alertLog.getPreviousLevel());
-        dto.setNewLevel(alertLog.getNewLevel());
-        dto.setClosedAt(alertLog.getClosedAt());
-        dto.setAlertMessage(alertLog.getAlert() != null ? alertLog.getAlert().getMessage() : null);
-        dto.setRegionName(alertLog.getRegion() != null ? alertLog.getRegion().getName() : null);
-        return dto;
+    public List<AlertLog> findByAlert(Alert alert) {
+        return alertLogRepository.findByAlert(alert);
     }
 }
