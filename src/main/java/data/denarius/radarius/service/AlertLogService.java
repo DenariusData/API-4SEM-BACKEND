@@ -9,9 +9,6 @@ import data.denarius.radarius.entity.Region;
 import java.util.List;
 
 public interface AlertLogService {
-
     AlertLog create(Short newLevel, Criterion criterion, Region region);
     void delete(Integer id);
-    AlertLog findById(Integer id);
-    List<AlertLog> findByAlert(Alert alert);
 }

@@ -41,14 +41,5 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    @Query("""
-        SELECT DISTINCT a
-        FROM Alert a
-        WHERE a.criterion.id = :criterionId
-        AND a.region.id = :regionId
-        ORDER BY a.createdAt DESC
-        LIMIT 1
-    """)
-    Optional<Alert> findLatestAlertByCriterionAndRegion(@Param("criterionId") Integer criterionId,
-                                           @Param("regionId") Integer regionId);
+    Optional<Alert> findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(Integer criterionId, Integer regionId);
 }
