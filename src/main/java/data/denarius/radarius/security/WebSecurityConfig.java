@@ -67,9 +67,7 @@ public class WebSecurityConfig {
                     "/api-test",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
-                    "/auth/login",
-                    "/criteria/**",
-                    "/criterion-levels/**"
+                    "/auth/login"
                 ).permitAll()
                 .requestMatchers("/**").permitAll() // TODO: remove after login
                 .requestMatchers("/api-test/secured")
