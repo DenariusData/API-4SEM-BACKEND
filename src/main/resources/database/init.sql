@@ -135,3 +135,30 @@ CREATE TABLE alert_log (
 CREATE INDEX ix_alert_log_ale_id ON alert_log(ale_id);
 CREATE INDEX ix_alert_log_reg_id ON alert_log(reg_id);
 CREATE INDEX ix_alert_log_cri_id ON alert_log(cri_id);
+
+-- Nota: A tabela dados_base_radares já existe no banco de dados
+-- Estrutura esperada:
+-- ID                       NOT NULL NUMBER        
+-- CAMERA_LAT               NOT NULL NUMBER(10,6)  
+-- CAMERA_LONG              NOT NULL NUMBER(10,6)  
+-- CAMERA_ID                NOT NULL VARCHAR2(50)  
+-- FAIXA_DA_CAMERA          NOT NULL NUMBER(2)     
+-- QUANTIDADE_DE_FAIXAS     NOT NULL NUMBER(2)     
+-- DATA_HORA                NOT NULL TIMESTAMP(6)  
+-- TIPO_VEICULO             NOT NULL VARCHAR2(20)  
+-- VELOCIDADE_VEICULO       NOT NULL NUMBER(5,2)   
+-- VELOCIDADE_REGULAMENTADA NOT NULL NUMBER(3)     
+-- ENDERECO                 NOT NULL VARCHAR2(200) 
+-- NUMERO                            VARCHAR2(10)  
+-- CIDADE                            VARCHAR2(100) 
+-- SENTIDO                           VARCHAR2(50)  
+
+-- Adicionar coluna de controle de processamento (se não existir)
+-- ALTER TABLE dados_base_radares ADD PROCESSADO NUMBER(1) DEFAULT 0 NOT NULL CHECK (PROCESSADO IN (0, 1));
+
+-- Índices adicionais para melhor performance (se não existirem)
+-- CREATE INDEX ix_dados_base_radares_camera_id ON dados_base_radares(CAMERA_ID);
+-- CREATE INDEX ix_dados_base_radares_cidade ON dados_base_radares(CIDADE);
+-- CREATE INDEX ix_dados_base_radares_data_hora ON dados_base_radares(DATA_HORA);
+-- CREATE INDEX ix_dados_base_radares_tipo_veiculo ON dados_base_radares(TIPO_VEICULO);
+-- CREATE INDEX ix_dados_base_radares_processado ON dados_base_radares(PROCESSADO);
