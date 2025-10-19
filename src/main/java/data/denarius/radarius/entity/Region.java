@@ -3,6 +3,7 @@ package data.denarius.radarius.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,4 +28,13 @@ public class Region {
 
     @Column(name = "reg_updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "reg_center_latitude", precision = 9, scale = 6)
+    private BigDecimal centerLatitude;
+
+    @Column(name = "reg_center_longitude", precision = 9, scale = 6)
+    private BigDecimal centerLongitude;
+
+    @Column(name = "reg_radius_km", precision = 5, scale = 2)
+    private BigDecimal radiusKm;
 }

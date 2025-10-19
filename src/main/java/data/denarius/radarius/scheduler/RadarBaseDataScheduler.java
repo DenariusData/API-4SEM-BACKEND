@@ -3,6 +3,7 @@ package data.denarius.radarius.scheduler;
 import data.denarius.radarius.entity.*;
 import data.denarius.radarius.enums.SourceTypeEnum;
 import data.denarius.radarius.repository.*;
+import data.denarius.radarius.service.GeolocationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -40,12 +41,15 @@ public class RadarBaseDataScheduler {
     @Autowired
     private RootCauseRepository rootCauseRepository;
 
+    @Autowired
+    private GeolocationService geolocationService;
+
     private static final int BATCH_SIZE = 10;
-    private static final String DEFAULT_REGION_NAME = "Default Region";
+    private static final String DEFAULT_REGION_NAME = "Centro";
     private static final String DEFAULT_CRITERION_NAME = "Speed Above Limit";
     private static final String DEFAULT_ROOT_CAUSE_NAME = "Speeding";
 
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRate = 30 * 1000)
     @Transactional
     public void processRadarBaseData() {
         try {
@@ -98,7 +102,7 @@ public class RadarBaseDataScheduler {
         }
         
         Road road = createOrGetRoad(record);
-        Region region = createOrGetDefaultRegion();
+        Region region = determineRegionFromCoordinates(record.getCameraLatitude(), record.getCameraLongitude());
         Camera camera = createOrGetCamera(record, road, region);
         
         if (isSpeedAboveLimit(record)) {
@@ -201,6 +205,17 @@ public class RadarBaseDataScheduler {
         
         log.debug("Alert created for speeding: Camera {} - Speed {}km/h", 
                 record.getCameraId(), record.getVehicleSpeed());
+    }
+    
+    private Region determineRegionFromCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        Optional<Region> regionOpt = geolocationService.determineRegionFromCoordinates(latitude, longitude);
+        
+        if (regionOpt.isPresent()) {
+            return regionOpt.get();
+        } else {
+            log.warn("No region found for coordinates ({}, {}), using default region", latitude, longitude);
+            return createOrGetDefaultRegion();
+        }
     }
     
     private Region createOrGetDefaultRegion() {
