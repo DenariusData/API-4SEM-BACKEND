@@ -107,6 +107,17 @@ public class DadosBaseRadaresScheduler {
      * Processa um registro individual criando/atualizando as entidades relacionadas
      */
     private void processarRegistroIndividual(DadosBaseRadares registro) {
+        // Validações básicas antes do processamento
+        if (registro.getCameraLat() == null || registro.getCameraLong() == null) {
+            log.warn("Registro ID {} possui coordenadas inválidas, pulando processamento", registro.getId());
+            return;
+        }
+        
+        if (registro.getEndereco() == null || registro.getEndereco().trim().isEmpty()) {
+            log.warn("Registro ID {} possui endereço inválido, pulando processamento", registro.getId());
+            return;
+        }
+        
         // 1. Criar/obter Road
         Road road = criarOuObterRoad(registro);
         
@@ -128,46 +139,79 @@ public class DadosBaseRadaresScheduler {
     private Road criarOuObterRoad(DadosBaseRadares registro) {
         String endereco = montarEnderecoCompleto(registro);
         
-        // Busca road existente pelo endereço
-        Optional<Road> roadExistente = roadRepository.findByAddress(endereco);
-        
-        if (roadExistente.isPresent()) {
-            return roadExistente.get();
+        try {
+            // Busca road existente pelo endereço
+            Optional<Road> roadExistente = roadRepository.findByAddress(endereco);
+            
+            if (roadExistente.isPresent()) {
+                return roadExistente.get();
+            }
+            
+            // Cria nova road
+            Road novaRoad = Road.builder()
+                    .address(endereco)
+                    .speedLimit(new BigDecimal(registro.getVelocidadeRegulamentada()))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            
+            return roadRepository.save(novaRoad);
+            
+        } catch (Exception e) {
+            // Se falhou ao criar (provavelmente por duplicata), tenta buscar novamente
+            log.warn("Erro ao criar Road para endereço '{}', tentando buscar novamente: {}", endereco, e.getMessage());
+            
+            Optional<Road> roadExistente = roadRepository.findByAddress(endereco);
+            if (roadExistente.isPresent()) {
+                log.info("Road encontrada após erro: {}", endereco);
+                return roadExistente.get();
+            }
+            
+            // Se ainda não encontrou, relança a exceção
+            throw new RuntimeException("Não foi possível criar ou encontrar Road para endereço: " + endereco, e);
         }
-        
-        // Cria nova road
-        Road novaRoad = Road.builder()
-                .address(endereco)
-                .speedLimit(new BigDecimal(registro.getVelocidadeRegulamentada()))
-                .createdAt(LocalDateTime.now())
-                .build();
-        
-        return roadRepository.save(novaRoad);
     }
     
     /**
-     * Cria ou obtém uma Camera baseada no Camera ID
+     * Cria ou obtém uma Camera baseada na latitude e longitude
      */
     private Camera criarOuObterCamera(DadosBaseRadares registro, Road road, Region region) {
-        // Busca por latitude e longitude (considerando que camera_id pode não ser único)
-        Optional<Camera> cameraExistente = cameraRepository
-                .findByLatitudeAndLongitude(registro.getCameraLat(), registro.getCameraLong());
-        
-        if (cameraExistente.isPresent()) {
-            return cameraExistente.get();
+        try {
+            // Busca por latitude e longitude (considerando que camera_id pode não ser único)
+            Optional<Camera> cameraExistente = cameraRepository
+                    .findByLatitudeAndLongitude(registro.getCameraLat(), registro.getCameraLong());
+            
+            if (cameraExistente.isPresent()) {
+                return cameraExistente.get();
+            }
+            
+            // Cria nova camera
+            Camera novaCamera = Camera.builder()
+                    .latitude(registro.getCameraLat())
+                    .longitude(registro.getCameraLong())
+                    .active(true)
+                    .createdAt(LocalDateTime.now())
+                    .road(road)
+                    .region(region)
+                    .build();
+            
+            return cameraRepository.save(novaCamera);
+            
+        } catch (Exception e) {
+            // Se falhou ao criar (provavelmente por duplicata), tenta buscar novamente
+            String coordenadas = registro.getCameraLat() + "," + registro.getCameraLong();
+            log.warn("Erro ao criar Camera para coordenadas '{}', tentando buscar novamente: {}", coordenadas, e.getMessage());
+            
+            Optional<Camera> cameraExistente = cameraRepository
+                    .findByLatitudeAndLongitude(registro.getCameraLat(), registro.getCameraLong());
+            
+            if (cameraExistente.isPresent()) {
+                log.info("Camera encontrada após erro: {}", coordenadas);
+                return cameraExistente.get();
+            }
+            
+            // Se ainda não encontrou, relança a exceção
+            throw new RuntimeException("Não foi possível criar ou encontrar Camera para coordenadas: " + coordenadas, e);
         }
-        
-        // Cria nova camera
-        Camera novaCamera = Camera.builder()
-                .latitude(registro.getCameraLat())
-                .longitude(registro.getCameraLong())
-                .active(true)
-                .createdAt(LocalDateTime.now())
-                .road(road)
-                .region(region)
-                .build();
-        
-        return cameraRepository.save(novaCamera);
     }
     
     /**
@@ -208,40 +252,58 @@ public class DadosBaseRadaresScheduler {
      * Métodos auxiliares para criar entidades padrão
      */
     private Region criarOuObterRegionPadrao() {
-        return regionRepository.findByName(DEFAULT_REGION_NAME)
-                .orElseGet(() -> {
-                    Region novaRegion = Region.builder()
-                            .name(DEFAULT_REGION_NAME)
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    return regionRepository.save(novaRegion);
-                });
+        try {
+            return regionRepository.findByName(DEFAULT_REGION_NAME)
+                    .orElseGet(() -> {
+                        Region novaRegion = Region.builder()
+                                .name(DEFAULT_REGION_NAME)
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return regionRepository.save(novaRegion);
+                    });
+        } catch (Exception e) {
+            log.warn("Erro ao criar Region padrão, tentando buscar novamente: {}", e.getMessage());
+            return regionRepository.findByName(DEFAULT_REGION_NAME)
+                    .orElseThrow(() -> new RuntimeException("Não foi possível criar ou encontrar Region padrão", e));
+        }
     }
     
     private Criterion criarOuObterCriterionPadrao() {
-        return criterionRepository.findByName(DEFAULT_CRITERION_NAME)
-                .orElseGet(() -> {
-                    Criterion novoCriterion = Criterion.builder()
-                            .name(DEFAULT_CRITERION_NAME)
-                            .description("Critério para detectar velocidade acima do limite regulamentado")
-                            .example("Velocidade > Limite Regulamentado")
-                            .mathExpression("velocidade_veiculo > velocidade_regulamentada")
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    return criterionRepository.save(novoCriterion);
-                });
+        try {
+            return criterionRepository.findByName(DEFAULT_CRITERION_NAME)
+                    .orElseGet(() -> {
+                        Criterion novoCriterion = Criterion.builder()
+                                .name(DEFAULT_CRITERION_NAME)
+                                .description("Critério para detectar velocidade acima do limite regulamentado")
+                                .example("Velocidade > Limite Regulamentado")
+                                .mathExpression("velocidade_veiculo > velocidade_regulamentada")
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return criterionRepository.save(novoCriterion);
+                    });
+        } catch (Exception e) {
+            log.warn("Erro ao criar Criterion padrão, tentando buscar novamente: {}", e.getMessage());
+            return criterionRepository.findByName(DEFAULT_CRITERION_NAME)
+                    .orElseThrow(() -> new RuntimeException("Não foi possível criar ou encontrar Criterion padrão", e));
+        }
     }
     
     private RootCause criarOuObterRootCausePadrao() {
-        return rootCauseRepository.findByName(DEFAULT_ROOT_CAUSE_NAME)
-                .orElseGet(() -> {
-                    RootCause novaRootCause = RootCause.builder()
-                            .name(DEFAULT_ROOT_CAUSE_NAME)
-                            .description("Causa raiz para infrações de velocidade detectadas por radar")
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    return rootCauseRepository.save(novaRootCause);
-                });
+        try {
+            return rootCauseRepository.findByName(DEFAULT_ROOT_CAUSE_NAME)
+                    .orElseGet(() -> {
+                        RootCause novaRootCause = RootCause.builder()
+                                .name(DEFAULT_ROOT_CAUSE_NAME)
+                                .description("Causa raiz para infrações de velocidade detectadas por radar")
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return rootCauseRepository.save(novaRootCause);
+                    });
+        } catch (Exception e) {
+            log.warn("Erro ao criar RootCause padrão, tentando buscar novamente: {}", e.getMessage());
+            return rootCauseRepository.findByName(DEFAULT_ROOT_CAUSE_NAME)
+                    .orElseThrow(() -> new RuntimeException("Não foi possível criar ou encontrar RootCause padrão", e));
+        }
     }
     
     /**
