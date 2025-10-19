@@ -30,10 +30,10 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
 
     private final Map<String, Integer> previousLevels = new ConcurrentHashMap<>();
 
-    private static final int REAL_TIME_WINDOW_SECONDS = 20;
+    private static final int REAL_TIME_WINDOW_MINUTES = 60; // Aumentado de 20 segundos para 60 minutos
     private static final int SPEED_VIOLATION_WINDOW_HOURS = 24;
     private static final BigDecimal RADAR_VISION_METERS = new BigDecimal("50.0");
-    private static final Integer SPEED_VIOLATION_THRESHOLD_PERCENT = 120; // 120% = 20% above limit
+    private static final Integer SPEED_VIOLATION_THRESHOLD_PERCENT = 110; // Reduzido para 10% acima do limite
 
     @Override
     public Map<Camera, List<CriterionCalculationResult>> calculateAndDetectLevelChanges() {
@@ -103,7 +103,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
     @Override
     public CriterionCalculationResult calculateCongestion(Camera camera) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime windowStart = now.minusSeconds(REAL_TIME_WINDOW_SECONDS);
+        LocalDateTime windowStart = now.minusMinutes(REAL_TIME_WINDOW_MINUTES);
         
         // Use optimized count query first to check if there's data
         Long vehicleCount = getVehicleCountInWindow(camera, windowStart, now);
@@ -134,16 +134,16 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
                 "No valid speed readings for congestion analysis");
         }
         
-        double congestionPercentage = Math.max(0.0, totalRelativeSpeed / validReadings);
+        double congestionPercentage = Math.min(100.0, Math.max(0.0, totalRelativeSpeed / validReadings));
         
         return createResult("Congestionamento", camera, BigDecimal.valueOf(congestionPercentage), 
-            validReadings, String.format("%.1f%% congestion based on relative speed", congestionPercentage));
+            validReadings, String.format("%.1f%% congestion based on relative speed (adjusted to 0-100%%)", congestionPercentage));
     }
 
     @Override
     public CriterionCalculationResult calculateVehicleDensity(Camera camera) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime windowStart = now.minusSeconds(REAL_TIME_WINDOW_SECONDS);
+        LocalDateTime windowStart = now.minusMinutes(REAL_TIME_WINDOW_MINUTES);
         
         // Use optimized count query first
         Long vehicleCount = getVehicleCountInWindow(camera, windowStart, now);
@@ -180,14 +180,19 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
             .divide(availableSpace, 6, RoundingMode.HALF_UP)
             .multiply(BigDecimal.valueOf(100));
         
+        // Limitando o resultado a 100%
+        if (densityPercentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+            densityPercentage = BigDecimal.valueOf(100);
+        }
+        
         return createResult("Densidade relativa de veículos por câmera", camera, densityPercentage, validVehicleCount,
-            String.format("%.1f%% road occupation", densityPercentage.doubleValue()));
+            String.format("%.1f%% road occupation (adjusted to 0-100%%)", densityPercentage.doubleValue()));
     }
 
     @Override
     public CriterionCalculationResult calculateLargeVehicleCirculation(Camera camera) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime windowStart = now.minusSeconds(REAL_TIME_WINDOW_SECONDS);
+        LocalDateTime windowStart = now.minusMinutes(REAL_TIME_WINDOW_MINUTES);
         
         // Use optimized query to get large vehicles directly
         List<RadarBaseData> largeVehicleData = getLargeVehiclesInWindow(camera, windowStart, now);
@@ -214,61 +219,90 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
                 "No vehicles for large vehicle analysis (excluding buses)");
         }
         
-        double largeVehiclePercentage = (double) largeVehicleData.size() / validTotalVehicles * 100.0;
+        double largeVehiclePercentage = Math.min(100.0, (double) largeVehicleData.size() / validTotalVehicles * 100.0);
         
         return createResult("Circulação de veículos de grande porte", camera, 
             BigDecimal.valueOf(largeVehiclePercentage), largeVehicleData.size(),
-            String.format("%.1f%% large vehicles (%d of %d vehicles)", 
+            String.format("%.1f%% large vehicles (%d of %d vehicles, adjusted to 0-100%%)", 
                 largeVehiclePercentage, largeVehicleData.size(), validTotalVehicles));
     }
 
     @Override
     public CriterionCalculationResult calculateSpeedViolations(Camera camera) {
+        // Pega os dados processados pelo RadarBaseDataScheduler nas últimas 24h
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime windowStart = now.minusHours(SPEED_VIOLATION_WINDOW_HOURS);
-        
-        // Use optimized query to get only speed violations directly
-        List<RadarBaseData> violationData = getSpeedViolationsInWindow(camera, windowStart, now, SPEED_VIOLATION_THRESHOLD_PERCENT);
-        Long totalVehicleCount = getVehicleCountInWindow(camera, windowStart, now);
-        
-        if (totalVehicleCount == 0) {
+
+        // Busca todos os registros da câmera nas últimas 24h
+        List<RadarBaseData> recentData = radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> !r.getDateTime().isBefore(windowStart) && !r.getDateTime().isAfter(now))
+            .toList();
+
+        if (recentData.isEmpty()) {
             return createResult("Infrações por excesso de velocidade", camera, BigDecimal.ZERO, 0,
                 "No traffic data available for speed violation analysis");
         }
-        
-        // Use unique vehicle identification to avoid counting same vehicle multiple times
-        Set<String> uniqueViolatingVehicles = new HashSet<>();
-        
-        for (RadarBaseData data : violationData) {
-            if (data.getCameraId() != null) {
-                String vehicleKey = data.getCameraId() + "_" + data.getDateTime().toLocalDate();
-                uniqueViolatingVehicles.add(vehicleKey);
+
+        // Identifica veículos únicos e suas infrações (20% acima do limite)
+        Set<String> allVehicles = new HashSet<>();
+        Set<String> speedingVehicles = new HashSet<>();
+
+        for (RadarBaseData data : recentData) {
+            // Usa combinação de câmera + data/hora como identificador único
+            String vehicleId = data.getCameraId() + "_" + data.getDateTime().toString();
+
+            if (data.getVehicleSpeed() != null && data.getSpeedLimit() != null && data.getSpeedLimit() > 0) {
+                allVehicles.add(vehicleId);
+                
+                double speedLimit = data.getSpeedLimit().doubleValue();
+                double actualSpeed = data.getVehicleSpeed().doubleValue();
+                double speedRatio = (actualSpeed / speedLimit) * 100;
+
+                if (speedRatio >= 120) { // 20% acima do limite
+                    speedingVehicles.add(vehicleId);
+                    log.info("Speed violation detected at camera {}: Vehicle {} speed: {}, limit: {}", 
+                        camera.getId(), vehicleId, actualSpeed, speedLimit);
+                }
             }
         }
-        
-        if (uniqueViolatingVehicles.isEmpty()) {
+
+        if (allVehicles.isEmpty()) {
             return createResult("Infrações por excesso de velocidade", camera, BigDecimal.ZERO, 0,
-                "No speed violations detected in the last 24 hours");
+                "No valid speed readings available");
         }
-        
-        // Calculate violation percentage based on unique vehicles
-        double violationPercentage = (double) uniqueViolatingVehicles.size() / totalVehicleCount * 100.0;
+
+        // Calcula a porcentagem de veículos únicos com infração
+        double violationPercentage = (double) speedingVehicles.size() / allVehicles.size() * 100.0;
         
         return createResult("Infrações por excesso de velocidade", camera, 
-            BigDecimal.valueOf(violationPercentage), uniqueViolatingVehicles.size(),
-            String.format("%.1f%% violation rate (%d violations in %d vehicles)", 
-                violationPercentage, uniqueViolatingVehicles.size(), totalVehicleCount.intValue()));
+            BigDecimal.valueOf(violationPercentage), speedingVehicles.size(),
+            String.format("%.1f%% violation rate (%d unique vehicles with violations out of %d total unique vehicles)", 
+                violationPercentage, speedingVehicles.size(), allVehicles.size()));
     }
 
     @Override
     public Integer calculateAlertLevel(String criterionName, Double calculatedValue) {
-        if (calculatedValue == null || calculatedValue < 0) return 1;
+        if (calculatedValue == null || calculatedValue < 0) {
+            log.warn("Invalid value for criterion {}: {}", criterionName, calculatedValue);
+            return 1;
+        }
         
-        if (calculatedValue >= 80.0) return 5;
-        if (calculatedValue >= 60.0) return 4;
-        if (calculatedValue >= 40.0) return 3;
-        if (calculatedValue >= 20.0) return 2;
-        return 1;
+        // Aplicando as faixas percentuais:
+        // level 1 - 0% até 19.99%
+        // level 2 - 20% até 39,99%
+        // level 3 - 40% até 59,99%
+        // level 4 - 60% até 79,99%
+        // level 5 - 80% até 100%
+        
+        if (calculatedValue >= 80.0 && calculatedValue <= 100.0) return 5;
+        if (calculatedValue >= 60.0 && calculatedValue < 80.0) return 4;
+        if (calculatedValue >= 40.0 && calculatedValue < 60.0) return 3;
+        if (calculatedValue >= 20.0 && calculatedValue < 40.0) return 2;
+        if (calculatedValue >= 0.0 && calculatedValue < 20.0) return 1;
+        
+        log.warn("Value out of expected range (0-100%) for criterion {}: {}", criterionName, calculatedValue);
+        return 1; // valor default para casos fora da faixa esperada
     }
 
     private boolean hasLevelChanged(CriterionCalculationResult result) {
@@ -282,51 +316,66 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
     }
     
     private List<RadarBaseData> getVehicleDataInWindow(Camera camera, LocalDateTime start, LocalDateTime end) {
-        if (camera.getLatitude() == null || camera.getLongitude() == null) {
-            log.warn("Camera {} has null coordinates", camera.getId());
-            return new ArrayList<>();
-        }
-        
-        return radarBaseDataRepository.findByCameraCoordinatesAndDateTimeBetween(
-            camera.getLatitude(), camera.getLongitude(), start, end);
+        // Filtrando em memória já que não temos uma query específica
+        List<RadarBaseData> data = radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> !r.getDateTime().isBefore(start) && !r.getDateTime().isAfter(end))
+            .toList();
+            
+        log.info("Found {} vehicle readings for camera {} between {} and {}", 
+            data.size(), camera.getId(), start, end);
+            
+        return data;
     }
     
     private Long getVehicleCountInWindow(Camera camera, LocalDateTime start, LocalDateTime end) {
-        if (camera.getLatitude() == null || camera.getLongitude() == null) {
-            return 0L;
-        }
-        
-        return radarBaseDataRepository.countByCameraCoordinatesAndDateTimeBetween(
-            camera.getLatitude(), camera.getLongitude(), start, end);
+        // Contando em memória já que não temos uma query de contagem específica
+        return radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> !r.getDateTime().isBefore(start) && !r.getDateTime().isAfter(end))
+            .count();
     }
     
     private List<RadarBaseData> getSpeedViolationsInWindow(Camera camera, LocalDateTime start, LocalDateTime end, Integer thresholdPercent) {
-        if (camera.getLatitude() == null || camera.getLongitude() == null) {
-            return new ArrayList<>();
-        }
-        
-        return radarBaseDataRepository.findSpeedViolationsByCameraAndDateTimeBetween(
-            camera.getLatitude(), camera.getLongitude(), start, end, thresholdPercent);
+        // Filtrando violações de velocidade em memória
+        List<RadarBaseData> violations = radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> !r.getDateTime().isBefore(start) && !r.getDateTime().isAfter(end))
+            .filter(r -> r.getVehicleSpeed() != null && r.getSpeedLimit() != null)
+            .filter(r -> r.getVehicleSpeed().doubleValue() > (r.getSpeedLimit().doubleValue() * thresholdPercent / 100.0))
+            .toList();
+            
+        log.info("Found {} speed violations for camera {} between {} and {} (threshold: {}%)", 
+            violations.size(), camera.getId(), start, end, thresholdPercent);
+            
+        return violations;
     }
     
     private List<RadarBaseData> getLargeVehiclesInWindow(Camera camera, LocalDateTime start, LocalDateTime end) {
-        if (camera.getLatitude() == null || camera.getLongitude() == null) {
-            return new ArrayList<>();
-        }
-        
-        return radarBaseDataRepository.findLargeVehiclesByCameraAndDateTimeBetween(
-            camera.getLatitude(), camera.getLongitude(), start, end);
+        // Filtrando veículos grandes em memória
+        List<RadarBaseData> largeVehicles = radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> !r.getDateTime().isBefore(start) && !r.getDateTime().isAfter(end))
+            .filter(r -> {
+                String type = r.getVehicleType().toLowerCase();
+                return type.contains("caminhão") || type.contains("van") || type.contains("camionete");
+            })
+            .toList();
+            
+        log.info("Found {} large vehicles for camera {} between {} and {}", 
+            largeVehicles.size(), camera.getId(), start, end);
+            
+        return largeVehicles;
     }
     
     private Integer getTotalLanesForCamera(Camera camera) {
-        if (camera.getLatitude() == null || camera.getLongitude() == null) {
-            return 2;
-        }
-        
-        List<Integer> lanes = radarBaseDataRepository.findTotalLanesByCameraCoordinatesSince(
-            camera.getLatitude(), camera.getLongitude(), LocalDateTime.now().minusHours(1));
-        
-        return lanes.isEmpty() ? 2 : lanes.get(0);
+        // Buscando o número de faixas do último registro
+        return radarBaseDataRepository.findByCameraId(camera.getId().toString())
+            .stream()
+            .filter(r -> r.getTotalLanes() != null)
+            .map(RadarBaseData::getTotalLanes)
+            .findFirst()
+            .orElse(2); // Default para 2 faixas se não encontrar informação
     }
     
     private CriterionCalculationResult createResult(String criterionName, Camera camera, 
