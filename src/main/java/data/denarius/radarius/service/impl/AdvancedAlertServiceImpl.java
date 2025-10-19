@@ -149,37 +149,35 @@ public class AdvancedAlertServiceImpl implements AdvancedAlertService {
         Integer regionId = calculation.getCamera().getRegion() != null ? 
             calculation.getCamera().getRegion().getId() : null;
         
-        // Find existing alert with same unique combination
-        Optional<Alert> existingAlert = alertRepository
-            .findTopBySourceTypeAndCriterionIdAndCameraIdAndRegionIdOrderByCreatedAtDesc(
+        // Find existing ACTIVE alert with same unique combination (optimized query)
+        Optional<Alert> existingActiveAlert = alertRepository
+            .findActiveAlertBySourceTypeAndCriterionIdAndCameraIdAndRegionId(
                 sourceType, criterionId, cameraId, regionId);
         
-        if (existingAlert.isPresent()) {
-            // Update existing alert
-            Alert alert = existingAlert.get();
-            return updateExistingAlert(alert, calculation);
+        if (existingActiveAlert.isPresent()) {
+            Alert alert = existingActiveAlert.get();
+            Short currentLevel = alert.getLevel();
+            Integer newLevel = calculation.getCalculatedLevel();
+            
+            // Skip update if level hasn't changed
+            if (Objects.equals(currentLevel, newLevel.shortValue())) {
+                log.debug("Active alert {} already has level {}, no update needed", 
+                    alert.getId(), currentLevel);
+                return alert;
+            }
+            
+            log.info("Updating active alert {} from level {} to level {}", 
+                alert.getId(), currentLevel, newLevel);
+            
+            // Update the alert
+            alert.setLevel(newLevel.shortValue());
+            alert.setMessage(buildAlertDescription(calculation));
+            
+            return alertRepository.save(alert);
         } else {
             // Create new alert
             return createNewAlert(calculation, sourceType);
         }
-    }
-
-    private Alert updateExistingAlert(Alert existingAlert, CriterionCalculationResult calculation) {
-        // Only update if the level has actually changed
-        Integer newLevel = calculation.getCalculatedLevel();
-        if (Objects.equals(existingAlert.getLevel(), newLevel)) {
-            log.debug("No level change for alert {}, skipping update", existingAlert.getId());
-            return existingAlert;
-        }
-        
-        log.info("Updating alert {} from level {} to level {}", 
-            existingAlert.getId(), existingAlert.getLevel(), newLevel);
-        
-        // Update the alert
-        existingAlert.setLevel(newLevel.shortValue());
-        existingAlert.setMessage(buildAlertDescription(calculation));
-        
-        return alertRepository.save(existingAlert);
     }
 
     private Alert createNewAlert(CriterionCalculationResult calculation, SourceTypeEnum sourceType) {

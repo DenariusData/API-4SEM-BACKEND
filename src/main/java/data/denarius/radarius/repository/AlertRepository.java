@@ -46,6 +46,13 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     Optional<Alert> findTopBySourceTypeAndCriterionIdAndCameraIdAndRegionIdOrderByCreatedAtDesc(
         SourceTypeEnum sourceType, Integer criterionId, Integer cameraId, Integer regionId);
     
+    @Query("SELECT a FROM Alert a WHERE a.sourceType = :sourceType AND a.criterion.id = :criterionId AND a.camera.id = :cameraId AND a.region.id = :regionId AND a.closedAt IS NULL ORDER BY a.createdAt DESC")
+    Optional<Alert> findActiveAlertBySourceTypeAndCriterionIdAndCameraIdAndRegionId(
+        @Param("sourceType") SourceTypeEnum sourceType, 
+        @Param("criterionId") Integer criterionId, 
+        @Param("cameraId") Integer cameraId, 
+        @Param("regionId") Integer regionId);
+    
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.createdAt < :threshold")
     List<Alert> findActiveAlertsOlderThan(@Param("threshold") LocalDateTime threshold);
     

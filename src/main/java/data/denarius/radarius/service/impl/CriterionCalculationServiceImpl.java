@@ -149,7 +149,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         Long vehicleCount = getVehicleCountInWindow(camera, windowStart, now);
         
         if (vehicleCount == 0) {
-            return createResult("Densidade Relativa", camera, BigDecimal.ZERO, 0,
+            return createResult("Densidade relativa de veículos por câmera", camera, BigDecimal.ZERO, 0,
                 "No traffic data available for density analysis");
         }
         
@@ -169,7 +169,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         }
         
         if (validVehicleCount == 0) {
-            return createResult("Densidade Relativa", camera, BigDecimal.ZERO, 0,
+            return createResult("Densidade relativa de veículos por câmera", camera, BigDecimal.ZERO, 0,
                 "No vehicles for density calculation (excluding buses)");
         }
         
@@ -180,7 +180,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
             .divide(availableSpace, 6, RoundingMode.HALF_UP)
             .multiply(BigDecimal.valueOf(100));
         
-        return createResult("Densidade Relativa", camera, densityPercentage, validVehicleCount,
+        return createResult("Densidade relativa de veículos por câmera", camera, densityPercentage, validVehicleCount,
             String.format("%.1f%% road occupation", densityPercentage.doubleValue()));
     }
 
@@ -194,7 +194,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         Long totalVehicleCount = getVehicleCountInWindow(camera, windowStart, now);
         
         if (totalVehicleCount == 0) {
-            return createResult("Circulação Veículos Grande Porte", camera, BigDecimal.ZERO, 0,
+            return createResult("Circulação de veículos de grande porte", camera, BigDecimal.ZERO, 0,
                 "No traffic data available for large vehicle analysis");
         }
         
@@ -210,13 +210,13 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         }
         
         if (validTotalVehicles == 0) {
-            return createResult("Circulação Veículos Grande Porte", camera, BigDecimal.ZERO, 0,
+            return createResult("Circulação de veículos de grande porte", camera, BigDecimal.ZERO, 0,
                 "No vehicles for large vehicle analysis (excluding buses)");
         }
         
         double largeVehiclePercentage = (double) largeVehicleData.size() / validTotalVehicles * 100.0;
         
-        return createResult("Circulação Veículos Grande Porte", camera, 
+        return createResult("Circulação de veículos de grande porte", camera, 
             BigDecimal.valueOf(largeVehiclePercentage), largeVehicleData.size(),
             String.format("%.1f%% large vehicles (%d of %d vehicles)", 
                 largeVehiclePercentage, largeVehicleData.size(), validTotalVehicles));
@@ -232,7 +232,7 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         Long totalVehicleCount = getVehicleCountInWindow(camera, windowStart, now);
         
         if (totalVehicleCount == 0) {
-            return createResult("Infrações Velocidade", camera, BigDecimal.ZERO, 0,
+            return createResult("Infrações por excesso de velocidade", camera, BigDecimal.ZERO, 0,
                 "No traffic data available for speed violation analysis");
         }
         
@@ -247,14 +247,14 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
         }
         
         if (uniqueViolatingVehicles.isEmpty()) {
-            return createResult("Infrações Velocidade", camera, BigDecimal.ZERO, 0,
+            return createResult("Infrações por excesso de velocidade", camera, BigDecimal.ZERO, 0,
                 "No speed violations detected in the last 24 hours");
         }
         
         // Calculate violation percentage based on unique vehicles
         double violationPercentage = (double) uniqueViolatingVehicles.size() / totalVehicleCount * 100.0;
         
-        return createResult("Infrações Velocidade", camera, 
+        return createResult("Infrações por excesso de velocidade", camera, 
             BigDecimal.valueOf(violationPercentage), uniqueViolatingVehicles.size(),
             String.format("%.1f%% violation rate (%d violations in %d vehicles)", 
                 violationPercentage, uniqueViolatingVehicles.size(), totalVehicleCount.intValue()));
@@ -333,23 +333,12 @@ public class CriterionCalculationServiceImpl implements CriterionCalculationServ
             BigDecimal value, int sampleSize, String description) {
         
         Criterion criterion = criterionRepository.findByName(criterionName)
-            .orElseGet(() -> createDefaultCriterion(criterionName));
+            .orElseThrow(() -> new RuntimeException("Criterion not found: " + criterionName + 
+                ". Please ensure all required criteria are created in the database via init.sql"));
         
         Integer alertLevel = calculateAlertLevel(criterionName, value.doubleValue());
         
         return new CriterionCalculationResult(criterion, camera, value, alertLevel, 
             sampleSize, description);
-    }
-    
-    private Criterion createDefaultCriterion(String name) {
-        Criterion criterion = Criterion.builder()
-            .name(name)
-            .description("Auto-generated criterion for " + name)
-            .example("System calculated criterion")
-            .mathExpression("Calculated based on traffic data")
-            .createdAt(LocalDateTime.now())
-            .build();
-        
-        return criterionRepository.save(criterion);
     }
 }

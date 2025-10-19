@@ -47,14 +47,11 @@ public class RadarBaseDataScheduler {
     private static final int BATCH_SIZE = 50;
     private static final String DEFAULT_REGION_NAME = "Centro";
 
-    @Scheduled(fixedRate = 30 * 1000)
+    @Scheduled(fixedRate = 1 * (60 * 1000))
     @Transactional
     public void processRadarBaseDataAndGenerateAlerts() {
         try {
             log.info("Starting radar base data processing with alert generation...");
-            
-            // Ensure the 4 advanced criteria exist in the database
-            initializeAdvancedCriteria();
             
             Long unprocessedCount = radarBaseDataRepository.countUnprocessedRecords();
             
@@ -266,74 +263,6 @@ public class RadarBaseDataScheduler {
         }
         
         return address.toString();
-    }
-    
-    /**
-     * Initialize the 4 advanced criteria used for traffic analysis
-     */
-    private void initializeAdvancedCriteria() {
-        try {
-            // 1. Congestionamento
-            criterionRepository.findByName("Congestionamento")
-                .orElseGet(() -> {
-                    log.info("Creating criterion: Congestionamento");
-                    Criterion congestion = Criterion.builder()
-                        .name("Congestionamento")
-                        .description("Medição de congestionamento baseado na velocidade relativa dos veículos")
-                        .example("Velocidade média < 60% da velocidade limite")
-                        .mathExpression("avg(vehicle_speed) / speed_limit < 0.6")
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    return criterionRepository.save(congestion);
-                });
-            
-            // 2. Densidade relativa de veículos por câmera
-            criterionRepository.findByName("Densidade relativa de veículos por câmera")
-                .orElseGet(() -> {
-                    log.info("Creating criterion: Densidade relativa de veículos por câmera");
-                    Criterion density = Criterion.builder()
-                        .name("Densidade relativa de veículos por câmera")
-                        .description("Densidade de veículos em relação ao espaço disponível na via")
-                        .example("Ocupação > 70% do espaço disponível")
-                        .mathExpression("vehicle_space_occupied / available_space > 0.7")
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    return criterionRepository.save(density);
-                });
-            
-            // 3. Circulação de veículos de grande porte
-            criterionRepository.findByName("Circulação de veículos de grande porte")
-                .orElseGet(() -> {
-                    log.info("Creating criterion: Circulação de veículos de grande porte");
-                    Criterion largeVehicles = Criterion.builder()
-                        .name("Circulação de veículos de grande porte")
-                        .description("Percentual de veículos de grande porte (caminhões, vans, ônibus) na via")
-                        .example("Veículos grandes > 30% do tráfego")
-                        .mathExpression("count(large_vehicles) / count(all_vehicles) > 0.3")
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    return criterionRepository.save(largeVehicles);
-                });
-            
-            // 4. Infrações por excesso de velocidade
-            criterionRepository.findByName("Infrações por excesso de velocidade")
-                .orElseGet(() -> {
-                    log.info("Creating criterion: Infrações por excesso de velocidade");
-                    Criterion speedViolations = Criterion.builder()
-                        .name("Infrações por excesso de velocidade")
-                        .description("Percentual de veículos que excedem o limite de velocidade")
-                        .example("Infrações > 20% dos veículos")
-                        .mathExpression("count(vehicles WHERE speed > speed_limit) / count(all_vehicles) > 0.2")
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    return criterionRepository.save(speedViolations);
-                });
-                
-            log.debug("Advanced criteria initialization completed");
-            
-        } catch (Exception e) {
-            log.error("Error initializing advanced criteria: {}", e.getMessage(), e);
-        }
     }
     
     private void createReadingRecord(RadarBaseData record, Camera camera) {
