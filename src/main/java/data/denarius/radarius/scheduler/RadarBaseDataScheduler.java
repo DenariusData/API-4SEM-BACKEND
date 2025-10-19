@@ -31,9 +31,6 @@ public class RadarBaseDataScheduler {
     
     @Autowired
     private RegionRepository regionRepository;
-    
-    @Autowired
-    private CriterionRepository criterionRepository;
 
     @Autowired
     private GeolocationService geolocationService;
