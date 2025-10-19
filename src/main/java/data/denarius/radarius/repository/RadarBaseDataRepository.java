@@ -51,4 +51,40 @@ public interface RadarBaseDataRepository extends JpaRepository<RadarBaseData, Lo
     @Modifying
     @Query("UPDATE RadarBaseData r SET r.processed = false")
     void resetAllProcessedFlags();
+    
+    // Optimized queries for performance
+    @Query("SELECT r FROM RadarBaseData r WHERE r.cameraLatitude = :latitude AND r.cameraLongitude = :longitude AND r.dateTime BETWEEN :start AND :end ORDER BY r.dateTime DESC")
+    List<RadarBaseData> findByCameraCoordinatesAndDateTimeBetween(
+        @Param("latitude") java.math.BigDecimal latitude, 
+        @Param("longitude") java.math.BigDecimal longitude, 
+        @Param("start") LocalDateTime start, 
+        @Param("end") LocalDateTime end);
+    
+    @Query("SELECT COUNT(r) FROM RadarBaseData r WHERE r.cameraLatitude = :latitude AND r.cameraLongitude = :longitude AND r.dateTime BETWEEN :start AND :end")
+    Long countByCameraCoordinatesAndDateTimeBetween(
+        @Param("latitude") java.math.BigDecimal latitude, 
+        @Param("longitude") java.math.BigDecimal longitude, 
+        @Param("start") LocalDateTime start, 
+        @Param("end") LocalDateTime end);
+    
+    @Query("SELECT r FROM RadarBaseData r WHERE r.cameraLatitude = :latitude AND r.cameraLongitude = :longitude AND r.dateTime BETWEEN :start AND :end AND r.vehicleSpeed > (r.speedLimit * :thresholdPercent / 100) ORDER BY r.dateTime DESC")
+    List<RadarBaseData> findSpeedViolationsByCameraAndDateTimeBetween(
+        @Param("latitude") java.math.BigDecimal latitude, 
+        @Param("longitude") java.math.BigDecimal longitude, 
+        @Param("start") LocalDateTime start, 
+        @Param("end") LocalDateTime end,
+        @Param("thresholdPercent") Integer thresholdPercent);
+    
+    @Query("SELECT r FROM RadarBaseData r WHERE r.cameraLatitude = :latitude AND r.cameraLongitude = :longitude AND r.dateTime BETWEEN :start AND :end AND (r.vehicleType LIKE '%Caminhão%' OR r.vehicleType LIKE '%Van%' OR r.vehicleType LIKE '%Camionete%') ORDER BY r.dateTime DESC")
+    List<RadarBaseData> findLargeVehiclesByCameraAndDateTimeBetween(
+        @Param("latitude") java.math.BigDecimal latitude, 
+        @Param("longitude") java.math.BigDecimal longitude, 
+        @Param("start") LocalDateTime start, 
+        @Param("end") LocalDateTime end);
+    
+    @Query("SELECT DISTINCT r.totalLanes FROM RadarBaseData r WHERE r.cameraLatitude = :latitude AND r.cameraLongitude = :longitude AND r.totalLanes IS NOT NULL AND r.dateTime >= :since ORDER BY r.totalLanes DESC")
+    List<Integer> findTotalLanesByCameraCoordinatesSince(
+        @Param("latitude") java.math.BigDecimal latitude, 
+        @Param("longitude") java.math.BigDecimal longitude, 
+        @Param("since") LocalDateTime since);
 }

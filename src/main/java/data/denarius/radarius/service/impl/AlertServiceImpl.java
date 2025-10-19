@@ -123,7 +123,7 @@ public class AlertServiceImpl implements AlertService {
     private AlertResponseDTO mapToDTO(Alert alert) {
         AlertResponseDTO dto = new AlertResponseDTO();
         dto.setId(alert.getId());
-        dto.setLevel(alert.getLevel());
+        dto.setLevel(alert.getLevel().shortValue());
         dto.setMessage(alert.getMessage());
         dto.setConclusion(alert.getConclusion());
         dto.setSourceType(alert.getSourceType());

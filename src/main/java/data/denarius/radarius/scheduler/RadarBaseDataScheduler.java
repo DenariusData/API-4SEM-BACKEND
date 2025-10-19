@@ -1,7 +1,7 @@
 package data.denarius.radarius.scheduler;
 
 import data.denarius.radarius.entity.*;
-import data.denarius.radarius.enums.SourceTypeEnum;
+import data.denarius.radarius.enums.VehicleTypeEnum;
 import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.GeolocationService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,40 +30,70 @@ public class RadarBaseDataScheduler {
     private RoadRepository roadRepository;
     
     @Autowired
-    private AlertRepository alertRepository;
-    
-    @Autowired
     private RegionRepository regionRepository;
     
     @Autowired
     private CriterionRepository criterionRepository;
-    
-    @Autowired
-    private RootCauseRepository rootCauseRepository;
 
     @Autowired
     private GeolocationService geolocationService;
+    
+    @Autowired
+    private ReadingRepository readingRepository;
+    
+    @Autowired
+    private data.denarius.radarius.service.AdvancedAlertService advancedAlertService;
 
-    private static final int BATCH_SIZE = 10;
+    private static final int BATCH_SIZE = 50;
     private static final String DEFAULT_REGION_NAME = "Centro";
-    private static final String DEFAULT_CRITERION_NAME = "Speed Above Limit";
-    private static final String DEFAULT_ROOT_CAUSE_NAME = "Speeding";
 
     @Scheduled(fixedRate = 30 * 1000)
     @Transactional
-    public void processRadarBaseData() {
+    public void processRadarBaseDataAndGenerateAlerts() {
         try {
-            log.info("Starting radar base data processing...");
+            log.info("Starting radar base data processing with alert generation...");
+            
+            // Ensure the 4 advanced criteria exist in the database
+            initializeAdvancedCriteria();
             
             Long unprocessedCount = radarBaseDataRepository.countUnprocessedRecords();
             
             if (unprocessedCount == 0) {
                 log.info("No new records to process.");
+                // Still process alerts for any recent data changes
+                try {
+                    advancedAlertService.processAllCriteriaAndGenerateAlerts();
+                    advancedAlertService.deactivateOldAlerts();
+                } catch (Exception e) {
+                    log.error("Error in alert processing: {}", e.getMessage(), e);
+                }
                 return;
             }
             
             log.info("Found {} unprocessed records", unprocessedCount);
             
+            // Process radar data
+            processUnprocessedData();
+            
+            // Generate alerts based on processed data
+            try {
+                log.info("Processing criteria calculations and generating alerts");
+                advancedAlertService.processAllCriteriaAndGenerateAlerts();
+                advancedAlertService.deactivateOldAlerts();
+                log.info("Completed alert processing");
+            } catch (Exception e) {
+                log.error("Error in alert processing: {}", e.getMessage(), e);
+            }
+            
+            log.info("Completed radar base data processing with alert generation");
+            
+        } catch (Exception e) {
+            log.error("Error in scheduler: {}", e.getMessage(), e);
+        }
+    }
+    
+    private void processUnprocessedData() {
+        try {
             List<RadarBaseData> recordsToProcess = radarBaseDataRepository
                     .findUnprocessedRecordsOrderByOldest(PageRequest.of(0, BATCH_SIZE));
             
@@ -81,8 +111,7 @@ public class RadarBaseDataScheduler {
                     }
                 }
                 
-                log.info("Batch processed. Approximately {} records remaining", 
-                    unprocessedCount - recordsToProcess.size());
+                log.info("Batch processed successfully");
             }
             
         } catch (Exception e) {
@@ -90,7 +119,10 @@ public class RadarBaseDataScheduler {
         }
     }
 
+    @Transactional
     private void processIndividualRecord(RadarBaseData record) {
+        log.debug("Processing radar data record ID: {}", record.getId());
+        
         if (record.getCameraLatitude() == null || record.getCameraLongitude() == null) {
             log.warn("Record ID {} has invalid coordinates, skipping processing", record.getId());
             return;
@@ -105,9 +137,11 @@ public class RadarBaseDataScheduler {
         Region region = determineRegionFromCoordinates(record.getCameraLatitude(), record.getCameraLongitude());
         Camera camera = createOrGetCamera(record, road, region);
         
-        if (isSpeedAboveLimit(record)) {
-            createAlert(record, camera, region);
-        }
+        // Create Reading record for traffic analysis
+        createReadingRecord(record, camera);
+        
+        // Alert generation is now handled by CriterionCalculationScheduler
+        // based on calculated criteria levels, not just speed violations
     }
     
     private Road createOrGetRoad(RadarBaseData record) {
@@ -142,7 +176,10 @@ public class RadarBaseDataScheduler {
     }
     
     private Camera createOrGetCamera(RadarBaseData record, Road road, Region region) {
+        String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
+        
         try {
+            // First, try to find existing camera
             Optional<Camera> existingCamera = cameraRepository
                     .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
             
@@ -150,61 +187,43 @@ public class RadarBaseDataScheduler {
                 return existingCamera.get();
             }
             
-            Camera newCamera = Camera.builder()
-                    .latitude(record.getCameraLatitude())
-                    .longitude(record.getCameraLongitude())
-                    .active(true)
-                    .createdAt(LocalDateTime.now())
-                    .road(road)
-                    .region(region)
-                    .build();
-            
-            return cameraRepository.save(newCamera);
+            // If not found, create new camera with synchronized block to avoid race conditions
+            synchronized (this) {
+                // Double-check after synchronization
+                existingCamera = cameraRepository
+                        .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
+                
+                if (existingCamera.isPresent()) {
+                    return existingCamera.get();
+                }
+                
+                Camera newCamera = Camera.builder()
+                        .latitude(record.getCameraLatitude())
+                        .longitude(record.getCameraLongitude())
+                        .active(true)
+                        .createdAt(LocalDateTime.now())
+                        .road(road)
+                        .region(region)
+                        .build();
+                
+                return cameraRepository.save(newCamera);
+            }
             
         } catch (Exception e) {
-            String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
-            log.warn("Error creating Camera for coordinates '{}', trying to search again: {}", coordinates, e.getMessage());
+            log.warn("Error with Camera for coordinates '{}', trying final search: {}", coordinates, e.getMessage());
             
+            // Final attempt to find the camera (it might have been created by another thread)
             Optional<Camera> existingCamera = cameraRepository
                     .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
             
             if (existingCamera.isPresent()) {
-                log.info("Camera found after error: {}", coordinates);
+                log.info("Camera found in final search: {}", coordinates);
                 return existingCamera.get();
             }
             
+            log.error("Could not create or find Camera for coordinates: {}", coordinates, e);
             throw new RuntimeException("Could not create or find Camera for coordinates: " + coordinates, e);
         }
-    }
-    
-    private void createAlert(RadarBaseData record, Camera camera, Region region) {
-        Criterion criterion = createOrGetDefaultCriterion();
-        RootCause rootCause = createOrGetDefaultRootCause();
-        
-        Short alertLevel = calculateAlertLevel(record);
-        
-        String message = String.format(
-                "Speed detected: %.1f km/h - Limit: %d km/h - Camera: %s",
-                record.getVehicleSpeed(),
-                record.getSpeedLimit(),
-                record.getCameraId()
-        );
-        
-        Alert newAlert = Alert.builder()
-                .level(alertLevel)
-                .message(message)
-                .sourceType(SourceTypeEnum.AUTOMATICO)
-                .createdAt(record.getDateTime())
-                .camera(camera)
-                .criterion(criterion)
-                .rootCause(rootCause)
-                .region(region)
-                .build();
-        
-        alertRepository.save(newAlert);
-        
-        log.debug("Alert created for speeding: Camera {} - Speed {}km/h", 
-                record.getCameraId(), record.getVehicleSpeed());
     }
     
     private Region determineRegionFromCoordinates(BigDecimal latitude, BigDecimal longitude) {
@@ -235,44 +254,6 @@ public class RadarBaseDataScheduler {
         }
     }
     
-    private Criterion createOrGetDefaultCriterion() {
-        try {
-            return criterionRepository.findByName(DEFAULT_CRITERION_NAME)
-                    .orElseGet(() -> {
-                        Criterion newCriterion = Criterion.builder()
-                                .name(DEFAULT_CRITERION_NAME)
-                                .description("Criterion to detect speed above regulated limit")
-                                .example("Speed > Regulated Limit")
-                                .mathExpression("vehicle_speed > speed_limit")
-                                .createdAt(LocalDateTime.now())
-                                .build();
-                        return criterionRepository.save(newCriterion);
-                    });
-        } catch (Exception e) {
-            log.warn("Error creating default Criterion, trying to search again: {}", e.getMessage());
-            return criterionRepository.findByName(DEFAULT_CRITERION_NAME)
-                    .orElseThrow(() -> new RuntimeException("Could not create or find default Criterion", e));
-        }
-    }
-    
-    private RootCause createOrGetDefaultRootCause() {
-        try {
-            return rootCauseRepository.findByName(DEFAULT_ROOT_CAUSE_NAME)
-                    .orElseGet(() -> {
-                        RootCause newRootCause = RootCause.builder()
-                                .name(DEFAULT_ROOT_CAUSE_NAME)
-                                .description("Root cause for speed violations detected by radar")
-                                .createdAt(LocalDateTime.now())
-                                .build();
-                        return rootCauseRepository.save(newRootCause);
-                    });
-        } catch (Exception e) {
-            log.warn("Error creating default RootCause, trying to search again: {}", e.getMessage());
-            return rootCauseRepository.findByName(DEFAULT_ROOT_CAUSE_NAME)
-                    .orElseThrow(() -> new RuntimeException("Could not create or find default RootCause", e));
-        }
-    }
-    
     private String buildCompleteAddress(RadarBaseData record) {
         StringBuilder address = new StringBuilder(record.getAddress());
         
@@ -287,29 +268,122 @@ public class RadarBaseDataScheduler {
         return address.toString();
     }
     
-    private boolean isSpeedAboveLimit(RadarBaseData record) {
-        return record.getVehicleSpeed() != null && 
-               record.getSpeedLimit() != null &&
-               record.getVehicleSpeed().compareTo(new BigDecimal(record.getSpeedLimit())) > 0;
+    /**
+     * Initialize the 4 advanced criteria used for traffic analysis
+     */
+    private void initializeAdvancedCriteria() {
+        try {
+            // 1. Congestionamento
+            criterionRepository.findByName("Congestionamento")
+                .orElseGet(() -> {
+                    log.info("Creating criterion: Congestionamento");
+                    Criterion congestion = Criterion.builder()
+                        .name("Congestionamento")
+                        .description("Medição de congestionamento baseado na velocidade relativa dos veículos")
+                        .example("Velocidade média < 60% da velocidade limite")
+                        .mathExpression("avg(vehicle_speed) / speed_limit < 0.6")
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                    return criterionRepository.save(congestion);
+                });
+            
+            // 2. Densidade relativa de veículos por câmera
+            criterionRepository.findByName("Densidade relativa de veículos por câmera")
+                .orElseGet(() -> {
+                    log.info("Creating criterion: Densidade relativa de veículos por câmera");
+                    Criterion density = Criterion.builder()
+                        .name("Densidade relativa de veículos por câmera")
+                        .description("Densidade de veículos em relação ao espaço disponível na via")
+                        .example("Ocupação > 70% do espaço disponível")
+                        .mathExpression("vehicle_space_occupied / available_space > 0.7")
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                    return criterionRepository.save(density);
+                });
+            
+            // 3. Circulação de veículos de grande porte
+            criterionRepository.findByName("Circulação de veículos de grande porte")
+                .orElseGet(() -> {
+                    log.info("Creating criterion: Circulação de veículos de grande porte");
+                    Criterion largeVehicles = Criterion.builder()
+                        .name("Circulação de veículos de grande porte")
+                        .description("Percentual de veículos de grande porte (caminhões, vans, ônibus) na via")
+                        .example("Veículos grandes > 30% do tráfego")
+                        .mathExpression("count(large_vehicles) / count(all_vehicles) > 0.3")
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                    return criterionRepository.save(largeVehicles);
+                });
+            
+            // 4. Infrações por excesso de velocidade
+            criterionRepository.findByName("Infrações por excesso de velocidade")
+                .orElseGet(() -> {
+                    log.info("Creating criterion: Infrações por excesso de velocidade");
+                    Criterion speedViolations = Criterion.builder()
+                        .name("Infrações por excesso de velocidade")
+                        .description("Percentual de veículos que excedem o limite de velocidade")
+                        .example("Infrações > 20% dos veículos")
+                        .mathExpression("count(vehicles WHERE speed > speed_limit) / count(all_vehicles) > 0.2")
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                    return criterionRepository.save(speedViolations);
+                });
+                
+            log.debug("Advanced criteria initialization completed");
+            
+        } catch (Exception e) {
+            log.error("Error initializing advanced criteria: {}", e.getMessage(), e);
+        }
     }
     
-    private Short calculateAlertLevel(RadarBaseData record) {
-        BigDecimal speed = record.getVehicleSpeed();
-        Integer limit = record.getSpeedLimit();
-        
-        BigDecimal difference = speed.subtract(new BigDecimal(limit));
-        BigDecimal excessPercentage = difference.divide(new BigDecimal(limit), 2, java.math.RoundingMode.HALF_UP)
-                .multiply(new BigDecimal(100));
-        
-        if (excessPercentage.compareTo(new BigDecimal(50)) > 0) return 5;
-        if (excessPercentage.compareTo(new BigDecimal(30)) > 0) return 4;
-        if (excessPercentage.compareTo(new BigDecimal(20)) > 0) return 3;
-        if (excessPercentage.compareTo(new BigDecimal(10)) > 0) return 2;
-        return 1;
+    private void createReadingRecord(RadarBaseData record, Camera camera) {
+        try {
+            // Check for exact duplicate first (same time, camera, and speed)
+            Long exactDuplicates = readingRepository.countByCameraAndCreatedAtAndSpeed(
+                camera.getId(), record.getDateTime(), record.getVehicleSpeed());
+            
+            if (exactDuplicates > 0) {
+                log.debug("Exact reading duplicate found for camera {} at time {} with speed {}, skipping", 
+                    camera.getId(), record.getDateTime(), record.getVehicleSpeed());
+                return;
+            }
+            
+            // Check if a similar reading already exists in a time window to avoid near-duplicates
+            LocalDateTime startWindow = record.getDateTime().minusSeconds(2);
+            LocalDateTime endWindow = record.getDateTime().plusSeconds(2);
+            
+            List<Reading> existingReadings = readingRepository.findByCameraAndCreatedAtBetween(
+                camera, startWindow, endWindow);
+            
+            // If there are too many readings in the same 4-second window for this camera, skip
+            if (existingReadings.size() >= 3) {
+                log.debug("Too many readings ({}) for camera {} in time window around {}, skipping to prevent spam", 
+                    existingReadings.size(), camera.getId(), record.getDateTime());
+                return;
+            }
+            
+            VehicleTypeEnum vehicleType = VehicleTypeEnum.fromString(record.getVehicleType());
+            
+            Reading reading = Reading.builder()
+                .createdAt(record.getDateTime())
+                .vehicleType(vehicleType)
+                .speed(record.getVehicleSpeed())
+                .plate(null) // Plate detection not implemented yet
+                .camera(camera)
+                .build();
+            
+            readingRepository.save(reading);
+            
+            log.debug("Reading record created for camera {} - Vehicle: {} - Speed: {}km/h", 
+                camera.getId(), vehicleType.getDisplayName(), record.getVehicleSpeed());
+                
+        } catch (Exception e) {
+            log.error("Error creating reading record for camera {}: {}", camera.getId(), e.getMessage(), e);
+        }
     }
     
     public void forceProcessing() {
         log.info("Processing forced via endpoint");
-        processRadarBaseData();
+        processUnprocessedData();
     }
 }
