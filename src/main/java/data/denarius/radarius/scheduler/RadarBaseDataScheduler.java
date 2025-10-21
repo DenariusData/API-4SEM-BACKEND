@@ -49,7 +49,7 @@ public class RadarBaseDataScheduler {
     private static final String DEFAULT_CRITERION_NAME = "Speed Above Limit";
     private static final String DEFAULT_ROOT_CAUSE_NAME = "Speeding";
 
-    @Scheduled(fixedRate = 30 * 1000)
+    @Scheduled(fixedRate = 1 * 60 * (60 * 1000))
     @Transactional
     public void processRadarBaseData() {
         try {
