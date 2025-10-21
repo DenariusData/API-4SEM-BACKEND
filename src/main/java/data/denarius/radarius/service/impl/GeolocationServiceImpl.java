@@ -54,8 +54,6 @@ public class GeolocationServiceImpl implements GeolocationService {
             }
 
             if (closestRegion != null) {
-                log.info("Coordinates ({}, {}) determined to be in region '{}' at distance {:.2f}km", 
-                    latitude, longitude, closestRegion.getName(), minDistance);
                 return Optional.of(closestRegion);
             } else {
                 log.warn("No region found for coordinates ({}, {})", latitude, longitude);

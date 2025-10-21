@@ -32,8 +32,8 @@ public class AlertLog {
     @Column(name = "al_closed_at")
     private LocalDateTime closedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "ale_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "ale_id", nullable = false)
     private Alert alert;
 
     @ManyToOne
