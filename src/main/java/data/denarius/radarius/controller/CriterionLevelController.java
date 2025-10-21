@@ -36,6 +36,11 @@ public class CriterionLevelController {
         return ResponseEntity.ok(criterionLevelService.findAll());
     }
 
+    @GetMapping("/by-criterion/{criterionId}")
+    public ResponseEntity<List<CriterionLevelResponseDTO>> findByCriterionId(@PathVariable Integer criterionId) {
+        return ResponseEntity.ok(criterionLevelService.findByCriterionId(criterionId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         criterionLevelService.delete(id);
