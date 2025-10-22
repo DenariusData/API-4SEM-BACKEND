@@ -106,7 +106,7 @@ public class RadarBaseDataScheduler {
         Camera camera = createOrGetCamera(record, road, region);
         
         if (isSpeedAboveLimit(record)) {
-            createAlert(record, camera, region);
+            // createAlert(record, camera, region);
         }
     }
     
