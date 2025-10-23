@@ -33,7 +33,7 @@ public class LevelScheduler {
         Criterion criterion = criterionService.findById(1).orElse(null);
 
         if (!newLevel.equals(previousLevel)) {
-            alertLogService.create(newLevel, criterion, region);
+//            alertLogService.create(newLevel, criterion, region);
         }
     }
 }
