@@ -44,7 +44,7 @@ public class RadarBaseDataScheduler {
     private static final int BATCH_SIZE = 50;
     private static final String DEFAULT_REGION_NAME = "Centro";
 
-    @Scheduled(fixedRate = 1 * (60 * 1000))
+    @Scheduled(fixedRate = 1 * 60 * (60 * 1000))
     @Transactional
     public void processRadarBaseDataAndGenerateAlerts() {
         try {
@@ -131,11 +131,9 @@ public class RadarBaseDataScheduler {
         Region region = determineRegionFromCoordinates(record.getCameraLatitude(), record.getCameraLongitude());
         Camera camera = createOrGetCamera(record, road, region);
         
-        // Create Reading record for traffic analysis
-        createReadingRecord(record, camera);
-        
-        // Alert generation is now handled by CriterionCalculationScheduler
-        // based on calculated criteria levels, not just speed violations
+        if (isSpeedAboveLimit(record)) {
+            // createAlert(record, camera, region);
+        }
     }
     
     private Road createOrGetRoad(RadarBaseData record) {

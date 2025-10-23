@@ -59,16 +59,16 @@ CREATE TABLE criterion (
 CREATE UNIQUE INDEX ux_cri_name ON criterion (cri_name);
 
 -- Insert the 4 advanced criteria used for traffic analysis
-INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES 
+INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES
 ('Congestionamento', 'Medição de congestionamento baseado na velocidade relativa dos veículos', 'Velocidade média < 60% da velocidade limite', 'avg(vehicle_speed) / speed_limit < 0.6', SYSTIMESTAMP);
 
-INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES 
+INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES
 ('Densidade relativa de veículos por câmera', 'Densidade de veículos em relação ao espaço disponível na via', 'Ocupação > 70% do espaço disponível', 'vehicle_space_occupied / available_space > 0.7', SYSTIMESTAMP);
 
-INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES 
+INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES
 ('Circulação de veículos de grande porte', 'Percentual de veículos de grande porte (caminhões, vans, ônibus) na via', 'Veículos grandes > 30% do tráfego', 'count(large_vehicles) / count(all_vehicles) > 0.3', SYSTIMESTAMP);
 
-INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES 
+INSERT INTO criterion (cri_name, cri_description, cri_example, cri_math_expression, cri_created_at) VALUES
 ('Infrações por excesso de velocidade', 'Percentual de veículos que excedem o limite de velocidade', 'Infrações > 20% dos veículos', 'count(vehicles WHERE speed > speed_limit) / count(all_vehicles) > 0.2', SYSTIMESTAMP);
 
 CREATE TABLE protocol (
