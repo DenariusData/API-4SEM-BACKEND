@@ -41,6 +41,9 @@ public interface RadarBaseDataRepository extends JpaRepository<RadarBaseData, Lo
     @Query("SELECT r FROM RadarBaseData r WHERE r.processed = false ORDER BY r.dateTime ASC")
     List<RadarBaseData> findUnprocessedRecordsOrderByOldest(Pageable pageable);
     
+    @Query("SELECT r FROM RadarBaseData r WHERE r.processed = false ORDER BY r.dateTime ASC")
+    List<RadarBaseData> findUnprocessedRecords();
+    
     @Query("SELECT COUNT(r) FROM RadarBaseData r WHERE r.processed = false")
     Long countUnprocessedRecords();
     
