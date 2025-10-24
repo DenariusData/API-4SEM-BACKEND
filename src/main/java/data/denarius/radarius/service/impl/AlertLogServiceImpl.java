@@ -61,14 +61,12 @@ public class AlertLogServiceImpl implements AlertLogService {
                 alertRepository.save(alert);
                 newAlertLog.setAlert(alert);
             }
-        } else {
-
-            if (alert != null && alert.getClosedAt() == null) {
-                alert.setClosedAt(LocalDateTime.now());
-                alertRepository.save(alert);
-                newAlertLog.setAlert(alert);
-            }
+        } else if (alert != null && alert.getClosedAt() == null) {
+            alert.setClosedAt(LocalDateTime.now());
+            alertRepository.save(alert);
+            newAlertLog.setAlert(alert);
         }
+
 
         return alertLogRepository.save(newAlertLog);
     }
