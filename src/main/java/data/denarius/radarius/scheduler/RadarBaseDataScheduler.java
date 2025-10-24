@@ -137,15 +137,45 @@ public class RadarBaseDataScheduler {
                 return;
             }
             
+            // Group records by road address to get Road entity
             Map<String, List<RadarBaseData>> recordsByRoad = lastHourRecords.stream()
                 .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
                 .collect(Collectors.groupingBy(r -> buildCompleteAddress(r)));
             
-            Map<String, Double> violationRateByRoad = new HashMap<>();
+            // Map roads to their regions
             Map<String, Road> roadByAddress = new HashMap<>();
+            for (String address : recordsByRoad.keySet()) {
+                Optional<Road> roadOpt = roadRepository.findByAddress(address);
+                roadOpt.ifPresent(road -> roadByAddress.put(address, road));
+            }
+            
+            // Group all records by region
+            Map<String, List<RadarBaseData>> recordsByRegion = new HashMap<>();
             
             for (Map.Entry<String, List<RadarBaseData>> entry : recordsByRoad.entrySet()) {
                 String address = entry.getKey();
+                Road road = roadByAddress.get(address);
+                
+                if (road != null) {
+                    List<Camera> cameras = cameraRepository.findByRoad(road);
+                    if (!cameras.isEmpty()) {
+                        Region region = cameras.get(0).getRegion();
+                        String regionName = region != null ? region.getName() : "Unknown";
+                        
+                        recordsByRegion
+                            .computeIfAbsent(regionName, k -> new ArrayList<>())
+                            .addAll(entry.getValue());
+                    }
+                }
+            }
+            
+            // Calculate violation rate per region
+            Map<String, Double> violationRateByRegion = new HashMap<>();
+            Map<String, Long> totalVehiclesByRegion = new HashMap<>();
+            Map<String, Long> violatingVehiclesByRegion = new HashMap<>();
+            
+            for (Map.Entry<String, List<RadarBaseData>> entry : recordsByRegion.entrySet()) {
+                String regionName = entry.getKey();
                 List<RadarBaseData> records = entry.getValue();
                 
                 long totalVehicles = records.size();
@@ -161,64 +191,32 @@ public class RadarBaseDataScheduler {
                 double violationRate = totalVehicles > 0 ? 
                     (double) violatingVehicles / totalVehicles : 0.0;
                     
-                violationRateByRoad.put(address, violationRate);
-                
-                Optional<Road> roadOpt = roadRepository.findByAddress(address);
-                roadOpt.ifPresent(road -> roadByAddress.put(address, road));
+                violationRateByRegion.put(regionName, violationRate);
+                totalVehiclesByRegion.put(regionName, totalVehicles);
+                violatingVehiclesByRegion.put(regionName, violatingVehicles);
             }
             
-            Map<String, List<Map.Entry<String, Double>>> violationsByRegion = new HashMap<>();
-            
-            for (Map.Entry<String, Double> entry : violationRateByRoad.entrySet()) {
-                String address = entry.getKey();
-                Road road = roadByAddress.get(address);
-                
-                if (road != null) {
-                    List<Camera> cameras = cameraRepository.findByRoad(road);
-                    if (!cameras.isEmpty()) {
-                        Region region = cameras.get(0).getRegion();
-                        String regionName = region != null ? region.getName() : "Unknown";
-                        
-                        violationsByRegion
-                            .computeIfAbsent(regionName, k -> new ArrayList<>())
-                            .add(entry);
-                    }
-                }
-            }
-            
+            // Log violation statistics by region
             log.info("===== SPEED VIOLATION STATISTICS BY REGION =====");
             log.info("Analysis period: {} to {}", oneHourBefore, mostRecentDate);
             log.info("Total records analyzed: {}", lastHourRecords.size());
             log.info("Total roads analyzed: {}", recordsByRoad.size());
             log.info("");
             
-            for (Map.Entry<String, List<Map.Entry<String, Double>>> regionEntry : 
-                    violationsByRegion.entrySet().stream()
+            for (Map.Entry<String, Double> regionEntry : 
+                    violationRateByRegion.entrySet().stream()
                         .sorted(Map.Entry.comparingByKey())
                         .collect(Collectors.toList())) {
                 
                 String regionName = regionEntry.getKey();
-                List<Map.Entry<String, Double>> roads = regionEntry.getValue();
-                
-                double averageViolationRate = roads.stream()
-                    .mapToDouble(Map.Entry::getValue)
-                    .average()
-                    .orElse(0.0);
+                double violationRate = regionEntry.getValue();
+                long totalVehicles = totalVehiclesByRegion.get(regionName);
+                long violatingVehicles = violatingVehiclesByRegion.get(regionName);
                 
                 log.info("Region: {}", regionName);
-                log.info("  - Number of roads: {}", roads.size());
-                log.info("  - Average violation rate: {}%", String.format("%.2f", averageViolationRate * 100));
-                
-                // Show top 3 roads with highest violations
-                roads.stream()
-                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                    .limit(3)
-                    .forEach(road -> 
-                        log.info("    * {}: {}%", 
-                            road.getKey().length() > 60 ? 
-                                road.getKey().substring(0, 57) + "..." : road.getKey(), 
-                            String.format("%.2f", road.getValue() * 100))
-                    );
+                log.info("  - Total vehicles: {}", totalVehicles);
+                log.info("  - Violating vehicles: {}", violatingVehicles);
+                log.info("  - Violation rate: {}%", String.format("%.2f", violationRate * 100));
                 log.info("");
             }
             
