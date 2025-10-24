@@ -19,7 +19,7 @@ import java.util.Random;
 
 @Slf4j
 @Component
-public class LevelScheduler {
+public class TelegramAlertScheduler {
     @Autowired
     private AlertLogService alertLogService;
 
@@ -38,7 +38,7 @@ public class LevelScheduler {
     private Map<String, Short> lastLevels = new HashMap<>();
 
     @Scheduled(fixedRate = 2 * (60 * 1000))
-    public void checkLevels() {
+    public void sendLevelChangeAlerts() {
         log.info("Verificando níveis...");
 
 
