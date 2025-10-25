@@ -11,6 +11,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,13 @@ public class RootCauseServiceImpl implements RootCauseService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<RootCauseResponseDTO> search(String query) {
+        return rootCauseRepository.findByNameContainingIgnoreCase(query).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private RootCause mapToEntity(RootCauseRequestDTO dto) {
         RootCause rootCause = new RootCause();
         updateEntity(rootCause, dto);
@@ -68,13 +76,10 @@ public class RootCauseServiceImpl implements RootCauseService {
     private void updateEntity(RootCause rootCause, RootCauseRequestDTO dto) {
         rootCause.setName(dto.getName());
         rootCause.setDescription(dto.getDescription());
-        rootCause.setCreatedAt(dto.getCreatedAt());
+        rootCause.setCreatedAt(LocalDateTime.now());
 
-        if (dto.getPersonId() != null)
-            rootCause.setPerson(personRepository.findById(dto.getPersonId()).orElse(null));
-
-        if (dto.getProtocolId() != null)
-            rootCause.setProtocol(protocolRepository.findById(dto.getProtocolId()).orElse(null));
+        if (dto.getCreatedBy() != null)
+            rootCause.setPerson(personRepository.findById(dto.getCreatedBy()).orElse(null));
     }
 
     private RootCauseResponseDTO mapToDTO(RootCause rootCause) {
@@ -84,7 +89,6 @@ public class RootCauseServiceImpl implements RootCauseService {
         dto.setDescription(rootCause.getDescription());
         dto.setCreatedAt(rootCause.getCreatedAt());
         dto.setPersonName(rootCause.getPerson() != null ? rootCause.getPerson().getName() : null);
-        dto.setProtocolName(rootCause.getProtocol() != null ? rootCause.getProtocol().getName() : null);
         return dto;
     }
 }

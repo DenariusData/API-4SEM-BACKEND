@@ -11,4 +11,5 @@ public interface ProtocolService {
     void delete(Integer id);
     ProtocolResponseDTO findById(Integer id);
     List<ProtocolResponseDTO> findAll();
+    List<ProtocolResponseDTO> search(String query);
 }

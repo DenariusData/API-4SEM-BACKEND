@@ -11,4 +11,5 @@ public interface RootCauseService {
     void delete(Integer id);
     RootCauseResponseDTO findById(Integer id);
     List<RootCauseResponseDTO> findAll();
+    List<RootCauseResponseDTO> search(String query);
 }
