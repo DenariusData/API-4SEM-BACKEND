@@ -45,9 +45,7 @@ public class SpeedViolationStatisticsService {
             log.info("Calculating speed violation statistics...");
             
             LocalDateTime oneHourBefore = mostRecentDate.minusHours(1);
-            log.info("Analyzing records from {} to {}", oneHourBefore, mostRecentDate);
             
-            // Fetch all records from last hour in one query
             List<RadarBaseData> lastHourRecords = radarBaseDataRepository
                 .findByDateTimeBetween(oneHourBefore, mostRecentDate);
             
@@ -58,24 +56,18 @@ public class SpeedViolationStatisticsService {
             
             log.info("Processing {} records from last hour", lastHourRecords.size());
             
-            // Build address cache
             Map<String, Road> roadCache = buildRoadCache(lastHourRecords);
             
-            // Build region cache
             Map<Road, Region> regionCache = buildRegionCache(roadCache.values());
             
-            // Group records by region and calculate statistics
             Map<String, List<RadarBaseData>> recordsByRegion = groupRecordsByRegion(
                 lastHourRecords, roadCache, regionCache);
             
-            // Calculate statistics per region
             List<SpeedViolationStatisticsDTO> statistics = calculateRegionStatistics(recordsByRegion);
             
-            // Process alerts for each region based on statistics
             processAlertsForStatistics(statistics, oneHourBefore, mostRecentDate);
             
             return statistics;
-            
         } catch (Exception e) {
             log.error("Error calculating speed violation statistics: {}", e.getMessage(), e);
             return Collections.emptyList();
@@ -83,20 +75,17 @@ public class SpeedViolationStatisticsService {
     }
     
     private Map<String, Road> buildRoadCache(List<RadarBaseData> records) {
-        // Get unique addresses from records
         Set<String> addresses = records.stream()
             .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
             .map(this::buildCompleteAddress)
             .collect(Collectors.toSet());
         
-        // Fetch all roads in one batch query
         Map<String, Road> roadCache = new HashMap<>();
         for (String address : addresses) {
             roadRepository.findByAddress(address)
                 .ifPresent(road -> roadCache.put(address, road));
         }
         
-        log.debug("Built road cache with {} entries", roadCache.size());
         return roadCache;
     }
     
@@ -109,8 +98,6 @@ public class SpeedViolationStatisticsService {
                 regionCache.put(road, cameras.get(0).getRegion());
             }
         }
-        
-        log.debug("Built region cache with {} entries", regionCache.size());
         return regionCache;
     }
     
@@ -169,7 +156,6 @@ public class SpeedViolationStatisticsService {
                 .build());
         }
         
-        // Sort by region name
         statistics.sort(Comparator.comparing(SpeedViolationStatisticsDTO::getRegionName));
         
         return statistics;
@@ -188,11 +174,6 @@ public class SpeedViolationStatisticsService {
             LocalDateTime end) {
         
         try {
-            log.info("===== PROCESSING SPEED VIOLATION ALERTS BY REGION =====");
-            log.info("Analysis period: {} to {}", start, end);
-            log.info("");
-            
-            // Get criterion for speed violations
             Criterion speedViolationCriterion = criterionRepository
                 .findByName(SPEED_VIOLATION_CRITERION_NAME)
                 .orElse(null);
@@ -205,9 +186,6 @@ public class SpeedViolationStatisticsService {
             for (SpeedViolationStatisticsDTO stat : statistics) {
                 processAlertForRegion(stat, speedViolationCriterion, end);
             }
-            
-            log.info("===================================================");
-            
         } catch (Exception e) {
             log.error("Error processing alerts for statistics: {}", e.getMessage(), e);
         }
@@ -223,41 +201,22 @@ public class SpeedViolationStatisticsService {
             double violationRate = stat.getViolationRate();
             short newLevel = calculateAlertLevel(violationRate);
             
-            log.info("Region: {}", regionName);
-            log.info("  - Total vehicles: {}", stat.getTotalVehicles());
-            log.info("  - Violating vehicles: {}", stat.getViolatingVehicles());
-            log.info("  - Violation rate: {}%", String.format("%.2f", violationRate * 100));
-            log.info("  - Alert level: {}", newLevel);
-            
-            // Find region entity
             Region region = findRegionByName(regionName);
             if (region == null) {
                 log.warn("  - Region '{}' not found in database", regionName);
                 return;
             }
             
-            // Find most recent open alert for this region and criterion
             Alert lastAlert = alertRepository
                 .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
                 .orElse(null);
             
             if (lastAlert == null) {
-                // No open alert found, create new one
                 createNewAlert(region, criterion, newLevel, stat, timestamp);
-                log.info("  - Action: Created new alert");
             } else {
-                // Check if level changed
-                if (lastAlert.getLevel() != newLevel) {
-                    lastAlert.setLevel(newLevel);
-                    alertRepository.save(lastAlert);
-                    log.info("  - Action: Updated alert level from {} to {}", lastAlert.getLevel(), newLevel);
-                } else {
-                    log.info("  - Action: No change (level {} maintained)", newLevel);
-                }
+                lastAlert.setLevel(newLevel);
+                alertRepository.save(lastAlert);
             }
-            
-            log.info("");
-            
         } catch (Exception e) {
             log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
         }

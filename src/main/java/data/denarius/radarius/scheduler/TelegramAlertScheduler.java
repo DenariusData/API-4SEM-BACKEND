@@ -37,7 +37,7 @@ public class TelegramAlertScheduler {
 
     private Map<String, Short> lastLevels = new HashMap<>();
 
-    @Scheduled(fixedRate = 2 * (60 * 1000))
+    // @Scheduled(fixedRate = 2 * (60 * 1000))
     public void sendLevelChangeAlerts() {
         log.info("Verificando níveis...");
 
