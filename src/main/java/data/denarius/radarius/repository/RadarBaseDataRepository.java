@@ -52,6 +52,10 @@ public interface RadarBaseDataRepository extends JpaRepository<RadarBaseData, Lo
     void markAsProcessed(@Param("id") Long id);
     
     @Modifying
+    @Query("UPDATE RadarBaseData r SET r.processed = true WHERE r.id IN :ids")
+    void markMultipleAsProcessed(@Param("ids") List<Long> ids);
+    
+    @Modifying
     @Query("UPDATE RadarBaseData r SET r.processed = false")
     void resetAllProcessedFlags();
     

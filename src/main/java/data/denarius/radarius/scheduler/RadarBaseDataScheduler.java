@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -38,7 +39,6 @@ public class RadarBaseDataScheduler {
     private SpeedViolationStatisticsService speedViolationStatisticsService;
     
     private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
-    private static final int PROCESS_MEMORY_RECORDS_BATCH_SIZE = 100;
     private static final String DEFAULT_REGION_NAME = "Centro";
 
     @Scheduled(fixedRate = 1 * 60 * (60 * 1000))
@@ -66,31 +66,112 @@ public class RadarBaseDataScheduler {
     
     private void processUnprocessedData(List<RadarBaseData> unprocessedRecords) {
         try {
+            Map<String, Road> roadCache = buildRoadCache(unprocessedRecords);
+            Map<String, Camera> cameraCache = buildCameraCache(unprocessedRecords);
+            
+            List<Road> newRoads = new ArrayList<>();
+            List<Camera> newCameras = new ArrayList<>();
+            List<Long> processedIds = new ArrayList<>();
+            
             int totalProcessed = 0;
-            for (int i = 0; i < unprocessedRecords.size(); i += PROCESS_MEMORY_RECORDS_BATCH_SIZE) {
-                int endIndex = Math.min(i + PROCESS_MEMORY_RECORDS_BATCH_SIZE, unprocessedRecords.size());
-                List<RadarBaseData> batch = unprocessedRecords.subList(i, endIndex);
+            
+            for (RadarBaseData record : unprocessedRecords) {
+                try {
+                    if (record.getCameraLatitude() == null || record.getCameraLongitude() == null) {
+                        log.warn("Record ID {} has invalid coordinates, skipping", record.getId());
+                        continue;
+                    }
+                    
+                    if (record.getAddress() == null || record.getAddress().trim().isEmpty()) {
+                        log.warn("Record ID {} has invalid address, skipping", record.getId());
+                        continue;
+                    }
+                    
+                    String completeAddress = buildCompleteAddress(record);
+                    String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
+                    
+                    Road road = roadCache.get(completeAddress);
+                    if (road == null) {
+                        road = newRoads.stream()
+                            .filter(r -> r.getAddress().equals(completeAddress))
+                            .findFirst()
+                            .orElse(null);
+                        
+                        if (road == null) {
+                            road = Road.builder()
+                                .address(completeAddress)
+                                .speedLimit(new BigDecimal(record.getSpeedLimit()))
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                            newRoads.add(road);
+                        }
+                    }
+                    
+                    Region region = determineRegionFromCoordinates(
+                        record.getCameraLatitude(), 
+                        record.getCameraLongitude()
+                    );
+                    
+                    Camera camera = cameraCache.get(coordinates);
+                    if (camera == null) {
+                        camera = newCameras.stream()
+                            .filter(c -> c.getLatitude().equals(record.getCameraLatitude()) 
+                                      && c.getLongitude().equals(record.getCameraLongitude()))
+                            .findFirst()
+                            .orElse(null);
+                        
+                        if (camera == null) {
+                            camera = Camera.builder()
+                                .latitude(record.getCameraLatitude())
+                                .longitude(record.getCameraLongitude())
+                                .active(true)
+                                .createdAt(LocalDateTime.now())
+                                .road(road)
+                                .region(region)
+                                .build();
+                            newCameras.add(camera);
+                        }
+                    }
+                    
+                    processedIds.add(record.getId());
+                    totalProcessed++;
+
+                    if (totalProcessed % 100 == 0) {
+                        log.info("Processed {} records so far...", totalProcessed);
+                    }
+                } catch (Exception e) {
+                    log.error("Error processing record ID {}: {}", record.getId(), e.getMessage(), e);
+                }
+            }
+            
+            if (!newRoads.isEmpty()) {
+                log.info("Saving {} new roads in batch", newRoads.size());
+                List<Road> savedRoads = roadRepository.saveAll(newRoads);
                 
-                log.info("Processing batch {}/{}: {} records", 
-                    (i / PROCESS_MEMORY_RECORDS_BATCH_SIZE) + 1, 
-                    (unprocessedRecords.size() + PROCESS_MEMORY_RECORDS_BATCH_SIZE - 1) / PROCESS_MEMORY_RECORDS_BATCH_SIZE, 
-                    batch.size());
+                Map<String, Road> savedRoadsMap = savedRoads.stream()
+                    .collect(Collectors.toMap(Road::getAddress, r -> r));
                 
-                for (RadarBaseData record : batch) {
-                    try {
-                        processIndividualRecord(record);
-                        radarBaseDataRepository.markAsProcessed(record.getId());
-                        totalProcessed++;
-                        log.debug("Record ID {} processed successfully", record.getId());
-                    } catch (Exception e) {
-                        log.error("Error processing record ID {}: {}", record.getId(), e.getMessage(), e);
+                for (Camera camera : newCameras) {
+                    if (camera.getRoad() != null && camera.getRoad().getId() == null) {
+                        Road savedRoad = savedRoadsMap.get(camera.getRoad().getAddress());
+                        if (savedRoad != null) {
+                            camera.setRoad(savedRoad);
+                        }
                     }
                 }
             }
             
-            log.info("Completed processing {} records", totalProcessed);
+            if (!newCameras.isEmpty()) {
+                cameraRepository.saveAll(newCameras);
+            }
             
-            // Calculate and log speed violation statistics
+            if (!processedIds.isEmpty()) {
+                radarBaseDataRepository.markMultipleAsProcessed(processedIds);
+            }
+            
+            log.info("Completed processing {} records (Roads: {}, Cameras: {})", 
+                totalProcessed, newRoads.size(), newCameras.size());
+            
             if (!unprocessedRecords.isEmpty()) {
                 RadarBaseData mostRecentRecord = unprocessedRecords.stream()
                     .filter(r -> r.getDateTime() != null)
@@ -105,6 +186,40 @@ public class RadarBaseDataScheduler {
         } catch (Exception e) {
             log.error("General error in radar base data processing: {}", e.getMessage(), e);
         }
+    }
+    
+    private Map<String, Road> buildRoadCache(List<RadarBaseData> records) {
+        Set<String> addresses = records.stream()
+            .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
+            .map(this::buildCompleteAddress)
+            .collect(Collectors.toSet());
+        
+        if (addresses.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        List<Road> existingRoads = roadRepository.findByAddressIn(addresses);
+        
+        return existingRoads.stream()
+            .collect(Collectors.toMap(Road::getAddress, road -> road));
+    }
+    
+    private Map<String, Camera> buildCameraCache(List<RadarBaseData> records) {
+        List<RadarBaseData> validRecords = records.stream()
+            .filter(r -> r.getCameraLatitude() != null && r.getCameraLongitude() != null)
+            .collect(Collectors.toList());
+        
+        if (validRecords.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        List<Camera> existingCameras = cameraRepository.findAll();
+        
+        return existingCameras.stream()
+            .collect(Collectors.toMap(
+                camera -> camera.getLatitude() + "," + camera.getLongitude(),
+                camera -> camera
+            ));
     }
 
     @Transactional
@@ -248,11 +363,6 @@ public class RadarBaseDataScheduler {
     
     public void forceProcessing() {
         log.info("Processing forced via endpoint");
-        List<RadarBaseData> unprocessedRecords = radarBaseDataRepository.findUnprocessedRecords();
-        if (!unprocessedRecords.isEmpty()) {
-            processUnprocessedData(unprocessedRecords);
-        } else {
-            log.info("No unprocessed records to force process");
-        }
+        processRadarBaseDataAndGenerateAlerts();
     }
 }
