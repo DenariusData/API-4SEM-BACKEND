@@ -1,6 +1,7 @@
 package data.denarius.radarius.entity;
 
 import data.denarius.radarius.enums.SourceTypeEnum;
+import data.denarius.radarius.listeners.AlertEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "alert")
+@EntityListeners(AlertEntityListener.class)
 public class Alert {
 
     @Id

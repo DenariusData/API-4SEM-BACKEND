@@ -2,7 +2,6 @@ package data.denarius.radarius.service.impl;
 
 import data.denarius.radarius.dto.protocol.ProtocolRequestDTO;
 import data.denarius.radarius.dto.protocol.ProtocolResponseDTO;
-import data.denarius.radarius.entity.Person;
 import data.denarius.radarius.entity.Protocol;
 import data.denarius.radarius.repository.PersonRepository;
 import data.denarius.radarius.repository.ProtocolRepository;

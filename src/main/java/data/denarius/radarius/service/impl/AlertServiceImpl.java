@@ -14,7 +14,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -128,7 +127,7 @@ public class AlertServiceImpl implements AlertService {
     private AlertResponseDTO mapToDTO(Alert alert) {
         AlertResponseDTO dto = new AlertResponseDTO();
         dto.setId(alert.getId());
-        dto.setLevel(alert.getLevel());
+        dto.setLevel(alert.getLevel().shortValue());
         dto.setMessage(alert.getMessage());
         dto.setConclusion(alert.getConclusion());
         dto.setSourceType(alert.getSourceType());
