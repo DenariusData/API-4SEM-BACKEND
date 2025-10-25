@@ -198,6 +198,7 @@ public class RadarBaseDataScheduler {
                 .camera(camera)
                 .criterion(criterion)
                 .rootCause(rootCause)
+                .protocol(rootCause != null ? rootCause.getProtocol() : null)
                 .region(region)
                 .build();
         

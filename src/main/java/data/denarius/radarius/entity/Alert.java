@@ -61,6 +61,10 @@ public class Alert {
     @JoinColumn(name = "rc_id")
     private RootCause rootCause;
 
+    @ManyToOne
+    @JoinColumn(name = "pro_id")
+    private Protocol protocol;
+
     @OneToMany(mappedBy = "alert")
     private List<DetectedIncident> incidents;
 
