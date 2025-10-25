@@ -1,6 +1,7 @@
 package data.denarius.radarius.scheduler;
 
 import data.denarius.radarius.entity.*;
+import data.denarius.radarius.enums.VehicleTypeEnum;
 import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.GeolocationService;
 import data.denarius.radarius.service.SpeedViolationStatisticsService;
@@ -31,6 +32,9 @@ public class RadarBaseDataScheduler {
     
     @Autowired
     private RegionRepository regionRepository;
+    
+    @Autowired
+    private ReadingRepository readingRepository;
 
     @Autowired
     private GeolocationService geolocationService;
@@ -71,6 +75,7 @@ public class RadarBaseDataScheduler {
             
             List<Road> newRoads = new ArrayList<>();
             List<Camera> newCameras = new ArrayList<>();
+            List<Reading> newReadings = new ArrayList<>();
             List<Long> processedIds = new ArrayList<>();
             
             int totalProcessed = 0;
@@ -133,6 +138,15 @@ public class RadarBaseDataScheduler {
                         }
                     }
                     
+                    Reading reading = Reading.builder()
+                        .createdAt(record.getDateTime() != null ? record.getDateTime() : LocalDateTime.now())
+                        .vehicleType(VehicleTypeEnum.fromString(record.getVehicleType()))
+                        .speed(record.getVehicleSpeed())
+                        .plate(null)
+                        .camera(camera)
+                        .build();
+                    newReadings.add(reading);
+                    
                     processedIds.add(record.getId());
                     totalProcessed++;
 
@@ -162,15 +176,35 @@ public class RadarBaseDataScheduler {
             }
             
             if (!newCameras.isEmpty()) {
-                cameraRepository.saveAll(newCameras);
+                List<Camera> savedCameras = cameraRepository.saveAll(newCameras);
+                
+                Map<String, Camera> savedCamerasMap = savedCameras.stream()
+                    .collect(Collectors.toMap(
+                        c -> c.getLatitude() + "," + c.getLongitude(),
+                        c -> c
+                    ));
+                
+                for (Reading reading : newReadings) {
+                    if (reading.getCamera() != null && reading.getCamera().getId() == null) {
+                        String cameraKey = reading.getCamera().getLatitude() + "," + reading.getCamera().getLongitude();
+                        Camera savedCamera = savedCamerasMap.get(cameraKey);
+                        if (savedCamera != null) {
+                            reading.setCamera(savedCamera);
+                        }
+                    }
+                }
+            }
+            
+            if (!newReadings.isEmpty()) {
+                readingRepository.saveAll(newReadings);
             }
             
             if (!processedIds.isEmpty()) {
                 radarBaseDataRepository.markMultipleAsProcessed(processedIds);
             }
             
-            log.info("Completed processing {} records (Roads: {}, Cameras: {})", 
-                totalProcessed, newRoads.size(), newCameras.size());
+            log.info("Completed processing {} records (Roads: {}, Cameras: {}, Readings: {})", 
+                totalProcessed, newRoads.size(), newCameras.size(), newReadings.size());
             
             if (!unprocessedRecords.isEmpty()) {
                 RadarBaseData mostRecentRecord = unprocessedRecords.stream()
