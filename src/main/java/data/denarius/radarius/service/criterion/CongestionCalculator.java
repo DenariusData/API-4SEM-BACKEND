@@ -6,7 +6,6 @@ import data.denarius.radarius.entity.RadarBaseData;
 import data.denarius.radarius.entity.Region;
 import data.denarius.radarius.repository.CameraRepository;
 import data.denarius.radarius.repository.RadarBaseDataRepository;
-import data.denarius.radarius.repository.RegionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,9 +29,6 @@ public class CongestionCalculator implements CriterionCalculator {
     @Autowired
     private CameraRepository cameraRepository;
     
-    @Autowired
-    private RegionRepository regionRepository;
-
     @Override
     public CriterionCalculationResult calculate(Camera camera) {
         return calculateCongestionForCamera(camera, LocalDateTime.now());

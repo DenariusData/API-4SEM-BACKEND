@@ -3,6 +3,7 @@ package data.denarius.radarius.scheduler;
 import data.denarius.radarius.entity.*;
 import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.GeolocationService;
+import data.denarius.radarius.service.SpeedViolationStatisticsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -35,12 +35,14 @@ public class RadarBaseDataScheduler {
     private GeolocationService geolocationService;
     
     @Autowired
+    private SpeedViolationStatisticsService speedViolationStatisticsService;
+    
+    @Autowired
     private data.denarius.radarius.service.AdvancedAlertService advancedAlertService;
 
     private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
     private static final int PROCESS_MEMORY_RECORDS_BATCH_SIZE = 100;
     private static final String DEFAULT_REGION_NAME = "Centro";
-    private static final BigDecimal SPEED_VIOLATION_THRESHOLD = new BigDecimal("1.10");
 
     @Scheduled(fixedRate = 1 * 60 * (60 * 1000))
     @Transactional
@@ -105,6 +107,7 @@ public class RadarBaseDataScheduler {
             
             log.info("Completed processing {} records", totalProcessed);
             
+            // Calculate and log speed violation statistics
             if (!unprocessedRecords.isEmpty()) {
                 RadarBaseData mostRecentRecord = unprocessedRecords.stream()
                     .filter(r -> r.getDateTime() != null)
@@ -112,118 +115,12 @@ public class RadarBaseDataScheduler {
                     .orElse(null);
                     
                 if (mostRecentRecord != null) {
-                    calculateSpeedViolationStatistics(mostRecentRecord.getDateTime());
+                    speedViolationStatisticsService.calculateStatistics(mostRecentRecord.getDateTime());
                 }
             }
             
         } catch (Exception e) {
             log.error("General error in radar base data processing: {}", e.getMessage(), e);
-        }
-    }
-    
-    private void calculateSpeedViolationStatistics(LocalDateTime mostRecentDate) {
-        try {
-            log.info("Calculating speed violation statistics...");
-            
-            LocalDateTime oneHourBefore = mostRecentDate.minusHours(1);
-            
-            log.info("Analyzing records from {} to {}", oneHourBefore, mostRecentDate);
-            
-            List<RadarBaseData> lastHourRecords = radarBaseDataRepository
-                .findByDateTimeBetween(oneHourBefore, mostRecentDate);
-            
-            if (lastHourRecords.isEmpty()) {
-                log.info("No records found in the last hour");
-                return;
-            }
-            
-            // Group records by road address to get Road entity
-            Map<String, List<RadarBaseData>> recordsByRoad = lastHourRecords.stream()
-                .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
-                .collect(Collectors.groupingBy(r -> buildCompleteAddress(r)));
-            
-            // Map roads to their regions
-            Map<String, Road> roadByAddress = new HashMap<>();
-            for (String address : recordsByRoad.keySet()) {
-                Optional<Road> roadOpt = roadRepository.findByAddress(address);
-                roadOpt.ifPresent(road -> roadByAddress.put(address, road));
-            }
-            
-            // Group all records by region
-            Map<String, List<RadarBaseData>> recordsByRegion = new HashMap<>();
-            
-            for (Map.Entry<String, List<RadarBaseData>> entry : recordsByRoad.entrySet()) {
-                String address = entry.getKey();
-                Road road = roadByAddress.get(address);
-                
-                if (road != null) {
-                    List<Camera> cameras = cameraRepository.findByRoad(road);
-                    if (!cameras.isEmpty()) {
-                        Region region = cameras.get(0).getRegion();
-                        String regionName = region != null ? region.getName() : "Unknown";
-                        
-                        recordsByRegion
-                            .computeIfAbsent(regionName, k -> new ArrayList<>())
-                            .addAll(entry.getValue());
-                    }
-                }
-            }
-            
-            // Calculate violation rate per region
-            Map<String, Double> violationRateByRegion = new HashMap<>();
-            Map<String, Long> totalVehiclesByRegion = new HashMap<>();
-            Map<String, Long> violatingVehiclesByRegion = new HashMap<>();
-            
-            for (Map.Entry<String, List<RadarBaseData>> entry : recordsByRegion.entrySet()) {
-                String regionName = entry.getKey();
-                List<RadarBaseData> records = entry.getValue();
-                
-                long totalVehicles = records.size();
-                long violatingVehicles = records.stream()
-                    .filter(r -> r.getVehicleSpeed() != null && r.getSpeedLimit() != null)
-                    .filter(r -> {
-                        BigDecimal speedLimit = new BigDecimal(r.getSpeedLimit());
-                        BigDecimal threshold = speedLimit.multiply(SPEED_VIOLATION_THRESHOLD);
-                        return r.getVehicleSpeed().compareTo(threshold) >= 0;
-                    })
-                    .count();
-                
-                double violationRate = totalVehicles > 0 ? 
-                    (double) violatingVehicles / totalVehicles : 0.0;
-                    
-                violationRateByRegion.put(regionName, violationRate);
-                totalVehiclesByRegion.put(regionName, totalVehicles);
-                violatingVehiclesByRegion.put(regionName, violatingVehicles);
-            }
-            
-            // Log violation statistics by region
-            log.info("===== SPEED VIOLATION STATISTICS BY REGION =====");
-            log.info("Analysis period: {} to {}", oneHourBefore, mostRecentDate);
-            log.info("Total records analyzed: {}", lastHourRecords.size());
-            log.info("Total roads analyzed: {}", recordsByRoad.size());
-            log.info("");
-            
-            for (Map.Entry<String, Double> regionEntry : 
-                    violationRateByRegion.entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .collect(Collectors.toList())) {
-                
-                String regionName = regionEntry.getKey();
-                double violationRate = regionEntry.getValue();
-                long totalVehicles = totalVehiclesByRegion.get(regionName);
-                long violatingVehicles = violatingVehiclesByRegion.get(regionName);
-                
-                log.info("Region: {}", regionName);
-                log.info("  - Total vehicles: {}", totalVehicles);
-                log.info("  - Violating vehicles: {}", violatingVehicles);
-                log.info("  - Violation rate: {}%", String.format("%.2f", violationRate * 100));
-                log.info("");
-            }
-            
-            log.info("================================================");
-            
-        } catch (Exception e) {
-            log.error("Error calculating speed violation statistics: {}", e.getMessage(), e);
         }
     }
 

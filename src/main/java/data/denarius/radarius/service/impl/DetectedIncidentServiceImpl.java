@@ -2,9 +2,7 @@ package data.denarius.radarius.service.impl;
 
 import data.denarius.radarius.dto.detectedincident.DetectedIncidentRequestDTO;
 import data.denarius.radarius.dto.detectedincident.DetectedIncidentResponseDTO;
-import data.denarius.radarius.entity.Alert;
 import data.denarius.radarius.entity.DetectedIncident;
-import data.denarius.radarius.entity.Person;
 import data.denarius.radarius.repository.AlertRepository;
 import data.denarius.radarius.repository.DetectedIncidentRepository;
 import data.denarius.radarius.repository.PersonRepository;

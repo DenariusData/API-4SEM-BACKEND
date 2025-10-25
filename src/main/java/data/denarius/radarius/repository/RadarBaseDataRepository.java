@@ -90,4 +90,9 @@ public interface RadarBaseDataRepository extends JpaRepository<RadarBaseData, Lo
         @Param("latitude") java.math.BigDecimal latitude, 
         @Param("longitude") java.math.BigDecimal longitude, 
         @Param("since") LocalDateTime since);
+    
+    @Query("SELECT r.address, r.number, r.city FROM RadarBaseData r WHERE r.dateTime BETWEEN :start AND :end AND r.processed = true AND r.address IS NOT NULL GROUP BY r.address, r.number, r.city")
+    List<Object[]> findDistinctAddressesByDateTimeBetween(
+        @Param("start") LocalDateTime start, 
+        @Param("end") LocalDateTime end);
 }
