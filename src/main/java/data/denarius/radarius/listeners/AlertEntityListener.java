@@ -55,7 +55,6 @@ public class AlertEntityListener {
         }
     }
     
-    // Event classes
     public static class AlertCreatedEvent {
         private final Alert alert;
         

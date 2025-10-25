@@ -50,11 +50,11 @@ public class SpeedViolationStatisticsService {
                 .findByDateTimeBetween(twentyMinutesBefore, mostRecentDate);
             
             if (lastTwentyMinutesRecords.isEmpty()) {
-                log.info("No records found in the last hour");
+                log.info("No records found in the last 20 minutes");
                 return Collections.emptyList();
             }
             
-            log.info("Processing {} records from last hour", lastTwentyMinutesRecords.size());
+            log.info("Processing {} records from last 20 minutes", lastTwentyMinutesRecords.size());
             
             Map<String, Road> roadCache = buildRoadCache(lastTwentyMinutesRecords);
             

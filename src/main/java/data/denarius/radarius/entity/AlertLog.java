@@ -1,5 +1,6 @@
 package data.denarius.radarius.entity;
 
+import data.denarius.radarius.listeners.AlertLogEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "alert_log")
+@EntityListeners(AlertLogEntityListener.class)
 public class AlertLog {
 
     @Id
