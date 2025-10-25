@@ -26,6 +26,14 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     List<Alert> findTop10ByRegion(@Param("regionId") Integer regionId, Pageable pageable);
 
     @Query("""
+        SELECT a
+        FROM Alert a
+        JOIN a.logs al
+        ORDER BY al.createdAt DESC
+    """)
+    List<Alert> findTop10(Pageable pageable);
+
+    @Query("""
         SELECT DISTINCT a
         FROM Alert a
         LEFT JOIN a.logs al

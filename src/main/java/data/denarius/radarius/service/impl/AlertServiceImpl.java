@@ -70,6 +70,13 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public List<AlertResponseDTO> getLast10AlertsByRegion(Integer regionId) {
         Pageable pageable = PageRequest.of(0, 10);
+
+        if (regionId == null)
+            return alertRepository.findTop10(pageable)
+                    .stream()
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+
         return alertRepository.findTop10ByRegion(regionId, pageable)
                 .stream()
                 .map(this::mapToDTO)
