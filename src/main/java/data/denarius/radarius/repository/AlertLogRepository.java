@@ -13,4 +13,6 @@ public interface AlertLogRepository extends JpaRepository<AlertLog, Integer> {
     Optional<AlertLog> findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(Integer criterionId, Integer regionId);
 
     List<AlertLog> findByAlert(Alert alert);
+    
+    Optional<AlertLog> findTopByAlertOrderByCreatedAtDesc(Alert alert);
 }
