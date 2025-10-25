@@ -44,28 +44,28 @@ public class SpeedViolationStatisticsService {
         try {
             log.info("Calculating speed violation statistics...");
             
-            LocalDateTime oneHourBefore = mostRecentDate.minusHours(1);
+            LocalDateTime twentyMinutesBefore = mostRecentDate.minusMinutes(20);
             
-            List<RadarBaseData> lastHourRecords = radarBaseDataRepository
-                .findByDateTimeBetween(oneHourBefore, mostRecentDate);
+            List<RadarBaseData> lastTwentyMinutesRecords = radarBaseDataRepository
+                .findByDateTimeBetween(twentyMinutesBefore, mostRecentDate);
             
-            if (lastHourRecords.isEmpty()) {
+            if (lastTwentyMinutesRecords.isEmpty()) {
                 log.info("No records found in the last hour");
                 return Collections.emptyList();
             }
             
-            log.info("Processing {} records from last hour", lastHourRecords.size());
+            log.info("Processing {} records from last hour", lastTwentyMinutesRecords.size());
             
-            Map<String, Road> roadCache = buildRoadCache(lastHourRecords);
+            Map<String, Road> roadCache = buildRoadCache(lastTwentyMinutesRecords);
             
             Map<Road, Region> regionCache = buildRegionCache(roadCache.values());
             
             Map<String, List<RadarBaseData>> recordsByRegion = groupRecordsByRegion(
-                lastHourRecords, roadCache, regionCache);
+                lastTwentyMinutesRecords, roadCache, regionCache);
             
             List<SpeedViolationStatisticsDTO> statistics = calculateRegionStatistics(recordsByRegion);
             
-            processAlertsForStatistics(statistics, oneHourBefore, mostRecentDate);
+            processAlertsForStatistics(statistics, twentyMinutesBefore, mostRecentDate);
             
             return statistics;
         } catch (Exception e) {

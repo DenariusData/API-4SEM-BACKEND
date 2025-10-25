@@ -45,7 +45,7 @@ public class RadarBaseDataScheduler {
     private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
     private static final String DEFAULT_REGION_NAME = "Centro";
 
-    @Scheduled(fixedRate = 1 * 60 * (60 * 1000))
+    @Scheduled(fixedRate = 3 * (60 * 1000))
     @Transactional
     public void processRadarBaseDataAndGenerateAlerts() {
         try {
