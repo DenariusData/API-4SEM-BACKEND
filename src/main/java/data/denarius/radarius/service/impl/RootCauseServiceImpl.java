@@ -4,7 +4,6 @@ import data.denarius.radarius.dto.rootcause.RootCauseRequestDTO;
 import data.denarius.radarius.dto.rootcause.RootCauseResponseDTO;
 import data.denarius.radarius.entity.RootCause;
 import data.denarius.radarius.repository.PersonRepository;
-import data.denarius.radarius.repository.ProtocolRepository;
 import data.denarius.radarius.repository.RootCauseRepository;
 import data.denarius.radarius.service.RootCauseService;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,9 +22,6 @@ public class RootCauseServiceImpl implements RootCauseService {
 
     @Autowired
     private PersonRepository personRepository;
-
-    @Autowired
-    private ProtocolRepository protocolRepository;
 
     @Override
     public RootCauseResponseDTO create(RootCauseRequestDTO dto) {
