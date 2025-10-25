@@ -12,11 +12,13 @@ import data.denarius.radarius.service.AlertLogService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -103,14 +105,15 @@ public class AlertLogServiceImpl implements AlertLogService {
             
             Short previousLevel = null;
             if (regionId != null && criterionId != null) {
-                Alert previousAlert = alertRepository
-                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterionId, regionId)
-                    .orElse(null);
+                List<Alert> previousAlerts = alertRepository
+                    .findByCriterionIdAndRegionIdExcludingIdOrderByCreatedAtDesc(
+                        criterionId, regionId, alertId, org.springframework.data.domain.PageRequest.of(0, 1));
                 
-                if (previousAlert != null && !previousAlert.getId().equals(alertId)) {
+                if (!previousAlerts.isEmpty()) {
+                    Alert previousAlert = previousAlerts.get(0);
                     previousLevel = previousAlert.getLevel();
-                    log.debug("Found previous Alert ID {} with level {} for new Alert ID {}", 
-                        previousAlert.getId(), previousLevel, alertId);
+                } else {
+                    log.info("No previous Alert found for Alert ID {} (first alert for this region/criterion)", alertId);
                 }
             }
             
@@ -124,7 +127,8 @@ public class AlertLogServiceImpl implements AlertLogService {
                 .build();
             
             alertLogRepository.save(alertLog);
-            log.info("AlertLog created for new Alert ID: {} (previousLevel: {})", alertId, previousLevel);
+            log.info("AlertLog created for new Alert ID: {} (previousLevel: {}, newLevel: {})", 
+                alertId, previousLevel, level);
             
         } catch (Exception e) {
             log.error("Error creating AlertLog for new alert {}: {}", alertId, e.getMessage(), e);

@@ -69,4 +69,11 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     
     Optional<Alert> findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(
         Criterion criterion, Region region);
+    
+    @Query("SELECT a FROM Alert a WHERE a.criterion.id = :criterionId AND a.region.id = :regionId AND a.id != :excludeId ORDER BY a.createdAt DESC")
+    List<Alert> findByCriterionIdAndRegionIdExcludingIdOrderByCreatedAtDesc(
+        @Param("criterionId") Integer criterionId, 
+        @Param("regionId") Integer regionId, 
+        @Param("excludeId") Integer excludeId,
+        Pageable pageable);
 }
