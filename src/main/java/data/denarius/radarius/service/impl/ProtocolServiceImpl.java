@@ -54,6 +54,13 @@ public class ProtocolServiceImpl implements ProtocolService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ProtocolResponseDTO> search(String query) {
+        return protocolRepository.findByNameContainingIgnoreCase(query).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private Protocol mapToEntity(ProtocolRequestDTO dto) {
         Protocol protocol = new Protocol();
         updateEntity(protocol, dto);
@@ -63,10 +70,10 @@ public class ProtocolServiceImpl implements ProtocolService {
     private void updateEntity(Protocol protocol, ProtocolRequestDTO dto) {
         protocol.setName(dto.getName());
         protocol.setDescription(dto.getDescription());
-        protocol.setCreatedAt(dto.getCreatedAt());
+        protocol.setCreatedAt((java.time.LocalDateTime.now()));
 
-        if (dto.getCreatedById() != null)
-            protocol.setCreatedBy(personRepository.findById(dto.getCreatedById()).orElse(null));
+        if (dto.getCreatedBy() != null)
+            protocol.setCreatedBy(personRepository.findById(dto.getCreatedBy()).orElse(null));
     }
 
     private ProtocolResponseDTO mapToDTO(Protocol protocol) {

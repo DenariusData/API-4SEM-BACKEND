@@ -32,7 +32,10 @@ public class RootCauseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RootCauseResponseDTO>> findAll() {
+    public ResponseEntity<List<RootCauseResponseDTO>> search(@RequestParam (required = false) String name) {
+        if (name != null && !name.isEmpty())
+            return ResponseEntity.ok(rootCauseService.search(name));
+
         return ResponseEntity.ok(rootCauseService.findAll());
     }
 

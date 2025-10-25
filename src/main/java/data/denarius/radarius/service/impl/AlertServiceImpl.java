@@ -30,6 +30,8 @@ public class AlertServiceImpl implements AlertService {
     private CriterionRepository criterionRepository;
     @Autowired
     private RootCauseRepository rootCauseRepository;
+    @Autowired
+    private ProtocolRepository protocolRepository;
 
     @Override
     public AlertResponseDTO create(AlertRequestDTO dto) {
@@ -117,6 +119,9 @@ public class AlertServiceImpl implements AlertService {
 
         if (dto.getRootCauseId() != null)
             alert.setRootCause(rootCauseRepository.findById(dto.getRootCauseId()).orElse(null));
+
+        if (dto.getProtocolId() != null)
+            alert.setProtocol(protocolRepository.findById(dto.getProtocolId()).orElse(null));
     }
 
     private AlertResponseDTO mapToDTO(Alert alert) {
@@ -132,6 +137,7 @@ public class AlertServiceImpl implements AlertService {
         dto.setAssignedToName(alert.getAssignedTo() != null ? alert.getAssignedTo().getName() : null);
         dto.setCriterionName(alert.getCriterion() != null ? alert.getCriterion().getName() : null);
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
+        dto.setProtocolName(alert.getProtocol() != null ? alert.getProtocol().getName() : null);
         return dto;
     }
 }

@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
 @Getter
 @Setter
 @Builder
@@ -33,8 +32,5 @@ public class Protocol {
     @ManyToOne
     @JoinColumn(name = "pro_created_by")
     private Person createdBy;
-
-    @OneToMany(mappedBy = "protocol")
-    private List<RootCause> rootCauses;
 }
 
