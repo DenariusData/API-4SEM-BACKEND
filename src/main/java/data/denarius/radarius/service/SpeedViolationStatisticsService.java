@@ -50,11 +50,11 @@ public class SpeedViolationStatisticsService {
                 .findByDateTimeBetween(twentyMinutesBefore, mostRecentDate);
             
             if (lastTwentyMinutesRecords.isEmpty()) {
-                log.info("No records found in the last hour");
+                log.info("No records found in the last 20 minutes");
                 return Collections.emptyList();
             }
             
-            log.info("Processing {} records from last hour", lastTwentyMinutesRecords.size());
+            log.info("Processing {} records from last 20 minutes", lastTwentyMinutesRecords.size());
             
             Map<String, Road> roadCache = buildRoadCache(lastTwentyMinutesRecords);
             
@@ -207,15 +207,29 @@ public class SpeedViolationStatisticsService {
                 return;
             }
             
-            Alert lastAlert = alertRepository
+            Alert openAlert = alertRepository
                 .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
                 .orElse(null);
             
-            if (lastAlert == null) {
-                createNewAlert(region, criterion, newLevel, stat, timestamp);
+            if (openAlert != null) {
+                if (openAlert.getLevel() != newLevel) {
+                    openAlert.setLevel(newLevel);
+                    alertRepository.save(openAlert);
+                    log.debug("Updated open Alert ID {} for region '{}': level {} -> {}", 
+                        openAlert.getId(), regionName, openAlert.getLevel(), newLevel);
+                }
             } else {
-                lastAlert.setLevel(newLevel);
-                alertRepository.save(lastAlert);
+                Alert lastAlert = alertRepository
+                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
+                    .orElse(null);
+                
+                if (lastAlert == null || lastAlert.getLevel() != newLevel) {
+                    createNewAlert(region, criterion, newLevel, stat, timestamp);
+                    log.debug("Created new Alert for region '{}' with level {} (previous level: {})", 
+                        regionName, newLevel, lastAlert != null ? lastAlert.getLevel() : "none");
+                } else {
+                    log.debug("No Alert created for region '{}' - level unchanged at {}", regionName, newLevel);
+                }
             }
         } catch (Exception e) {
             log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
