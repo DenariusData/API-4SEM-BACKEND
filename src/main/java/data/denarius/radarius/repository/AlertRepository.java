@@ -1,6 +1,8 @@
 package data.denarius.radarius.repository;
 
 import data.denarius.radarius.entity.Alert;
+import data.denarius.radarius.entity.Criterion;
+import data.denarius.radarius.entity.Region;
 import data.denarius.radarius.enums.SourceTypeEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,4 +66,7 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.level = :level")
     List<Alert> findActiveAlertsByLevel(@Param("level") Integer level);
+    
+    Optional<Alert> findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(
+        Criterion criterion, Region region);
 }

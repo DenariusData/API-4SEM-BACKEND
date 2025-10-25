@@ -32,6 +32,6 @@ public class RootCause {
     private Person person;
 
     @ManyToOne
-    @JoinColumn(name = "pro_id")
+    @JoinColumn(name = "pro_id", nullable = true)
     private Protocol protocol;
 }

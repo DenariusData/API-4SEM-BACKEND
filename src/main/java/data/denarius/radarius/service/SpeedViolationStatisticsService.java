@@ -1,13 +1,9 @@
 package data.denarius.radarius.service;
 
 import data.denarius.radarius.dto.speedviolation.SpeedViolationStatisticsDTO;
-import data.denarius.radarius.entity.Camera;
-import data.denarius.radarius.entity.RadarBaseData;
-import data.denarius.radarius.entity.Region;
-import data.denarius.radarius.entity.Road;
-import data.denarius.radarius.repository.CameraRepository;
-import data.denarius.radarius.repository.RadarBaseDataRepository;
-import data.denarius.radarius.repository.RoadRepository;
+import data.denarius.radarius.entity.*;
+import data.denarius.radarius.enums.SourceTypeEnum;
+import data.denarius.radarius.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +27,17 @@ public class SpeedViolationStatisticsService {
     @Autowired
     private CameraRepository cameraRepository;
     
+    @Autowired
+    private RegionRepository regionRepository;
+    
+    @Autowired
+    private data.denarius.radarius.repository.AlertRepository alertRepository;
+    
+    @Autowired
+    private data.denarius.radarius.repository.CriterionRepository criterionRepository;
+    
     private static final BigDecimal SPEED_VIOLATION_THRESHOLD = new BigDecimal("1.10");
+    private static final String SPEED_VIOLATION_CRITERION_NAME = "Infrações por excesso de velocidade";
     
     @Transactional(readOnly = true)
     public List<SpeedViolationStatisticsDTO> calculateStatistics(LocalDateTime mostRecentDate) {
@@ -65,8 +71,8 @@ public class SpeedViolationStatisticsService {
             // Calculate statistics per region
             List<SpeedViolationStatisticsDTO> statistics = calculateRegionStatistics(recordsByRegion);
             
-            // Log results
-            logStatistics(statistics, lastHourRecords.size(), oneHourBefore, mostRecentDate);
+            // Process alerts for each region based on statistics
+            processAlertsForStatistics(statistics, oneHourBefore, mostRecentDate);
             
             return statistics;
             
@@ -175,27 +181,127 @@ public class SpeedViolationStatisticsService {
         return record.getVehicleSpeed().compareTo(threshold) >= 0;
     }
     
-    private void logStatistics(
+    @Transactional
+    private void processAlertsForStatistics(
             List<SpeedViolationStatisticsDTO> statistics,
-            int totalRecords,
             LocalDateTime start,
             LocalDateTime end) {
         
-        log.info("===== SPEED VIOLATION STATISTICS BY REGION =====");
-        log.info("Analysis period: {} to {}", start, end);
-        log.info("Total records analyzed: {}", totalRecords);
-        log.info("");
+        try {
+            log.info("===== PROCESSING SPEED VIOLATION ALERTS BY REGION =====");
+            log.info("Analysis period: {} to {}", start, end);
+            log.info("");
+            
+            // Get criterion for speed violations
+            Criterion speedViolationCriterion = criterionRepository
+                .findByName(SPEED_VIOLATION_CRITERION_NAME)
+                .orElse(null);
+            
+            if (speedViolationCriterion == null) {
+                log.warn("Speed violation criterion '{}' not found in database", SPEED_VIOLATION_CRITERION_NAME);
+                return;
+            }
+            
+            for (SpeedViolationStatisticsDTO stat : statistics) {
+                processAlertForRegion(stat, speedViolationCriterion, end);
+            }
+            
+            log.info("===================================================");
+            
+        } catch (Exception e) {
+            log.error("Error processing alerts for statistics: {}", e.getMessage(), e);
+        }
+    }
+    
+    private void processAlertForRegion(
+            SpeedViolationStatisticsDTO stat,
+            Criterion criterion,
+            LocalDateTime timestamp) {
         
-        for (SpeedViolationStatisticsDTO stat : statistics) {
-            log.info("Region: {}", stat.getRegionName());
+        try {
+            String regionName = stat.getRegionName();
+            double violationRate = stat.getViolationRate();
+            short newLevel = calculateAlertLevel(violationRate);
+            
+            log.info("Region: {}", regionName);
             log.info("  - Total vehicles: {}", stat.getTotalVehicles());
             log.info("  - Violating vehicles: {}", stat.getViolatingVehicles());
-            log.info("  - Violation rate: {}%", 
-                String.format("%.2f", stat.getViolationRate() * 100));
+            log.info("  - Violation rate: {}%", String.format("%.2f", violationRate * 100));
+            log.info("  - Alert level: {}", newLevel);
+            
+            // Find region entity
+            Region region = findRegionByName(regionName);
+            if (region == null) {
+                log.warn("  - Region '{}' not found in database", regionName);
+                return;
+            }
+            
+            // Find most recent open alert for this region and criterion
+            Alert lastAlert = alertRepository
+                .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
+                .orElse(null);
+            
+            if (lastAlert == null) {
+                // No open alert found, create new one
+                createNewAlert(region, criterion, newLevel, stat, timestamp);
+                log.info("  - Action: Created new alert");
+            } else {
+                // Check if level changed
+                if (lastAlert.getLevel() != newLevel) {
+                    lastAlert.setLevel(newLevel);
+                    alertRepository.save(lastAlert);
+                    log.info("  - Action: Updated alert level from {} to {}", lastAlert.getLevel(), newLevel);
+                } else {
+                    log.info("  - Action: No change (level {} maintained)", newLevel);
+                }
+            }
+            
             log.info("");
+            
+        } catch (Exception e) {
+            log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
         }
+    }
+    
+    private void createNewAlert(
+            Region region,
+            Criterion criterion,
+            short level,
+            SpeedViolationStatisticsDTO stat,
+            LocalDateTime timestamp) {
         
-        log.info("================================================");
+        String message = String.format(
+            "Speed violation rate in region %s: %.2f%% (%d of %d vehicles exceeding limit by 10%% or more)",
+            region.getName(),
+            stat.getViolationRate() * 100,
+            stat.getViolatingVehicles(),
+            stat.getTotalVehicles()
+        );
+        
+        Alert newAlert = Alert.builder()
+            .level(level)
+            .message(message)
+            .sourceType(SourceTypeEnum.AUTOMATICO)
+            .createdAt(timestamp)
+            .criterion(criterion)
+            .region(region)
+            .build();
+        
+        alertRepository.save(newAlert);
+    }
+    
+    private short calculateAlertLevel(double violationRate) {
+        double percentage = violationRate * 100;
+        
+        if (percentage <= 0.5) return 1;
+        if (percentage <= 1.0) return 2;
+        if (percentage <= 2.0) return 3;
+        if (percentage <= 5.0) return 4;
+        return 5;
+    }
+    
+    private Region findRegionByName(String regionName) {
+        return regionRepository.findByName(regionName).orElse(null);
     }
     
     private String buildCompleteAddress(RadarBaseData record) {

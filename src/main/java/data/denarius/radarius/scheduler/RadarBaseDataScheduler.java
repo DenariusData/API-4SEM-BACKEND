@@ -37,9 +37,6 @@ public class RadarBaseDataScheduler {
     @Autowired
     private SpeedViolationStatisticsService speedViolationStatisticsService;
     
-    @Autowired
-    private data.denarius.radarius.service.AdvancedAlertService advancedAlertService;
-
     private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
     private static final int PROCESS_MEMORY_RECORDS_BATCH_SIZE = 100;
     private static final String DEFAULT_REGION_NAME = "Centro";
@@ -54,12 +51,6 @@ public class RadarBaseDataScheduler {
                     .findUnprocessedRecordsOrderByOldest(PageRequest.of(0, UNPROCESSED_RECORDS_BATCH_SIZE));
             
             if (unprocessedRecords.isEmpty()) {
-                log.info("No new records to process.");
-                try {
-                    advancedAlertService.deactivateOldAlerts();
-                } catch (Exception e) {
-                    log.error("Error deactivating old alerts: {}", e.getMessage(), e);
-                }
                 return;
             }
             
@@ -67,15 +58,7 @@ public class RadarBaseDataScheduler {
             
             processUnprocessedData(unprocessedRecords);
             
-            try {
-                advancedAlertService.deactivateOldAlerts();
-                log.info("Old alerts deactivated successfully");
-            } catch (Exception e) {
-                log.error("Error deactivating old alerts: {}", e.getMessage(), e);
-            }
-            
             log.info("Completed radar base data processing");
-            
         } catch (Exception e) {
             log.error("Error in scheduler: {}", e.getMessage(), e);
         }
