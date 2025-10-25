@@ -32,7 +32,10 @@ public class ProtocolController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProtocolResponseDTO>> findAll() {
+    public ResponseEntity<List<ProtocolResponseDTO>> search(@RequestParam (required = false) String name) {
+        if (name != null && !name.isEmpty())
+            return ResponseEntity.ok(protocolService.search(name));
+
         return ResponseEntity.ok(protocolService.findAll());
     }
 
