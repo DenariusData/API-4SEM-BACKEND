@@ -38,6 +38,12 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
                 return;
             }
 
+            if (newLevel == null || newLevel <= 2) {
+                log.debug("AlertLog ID {} has level {} (not critical), skipping notification", 
+                    alertLog.getId(), newLevel);
+                return;
+            }
+
             String message = buildTelegramMessage(region, criterion, previousLevel, newLevel, alertLog);
 
             telegramService.sendMessage(chatId, message);

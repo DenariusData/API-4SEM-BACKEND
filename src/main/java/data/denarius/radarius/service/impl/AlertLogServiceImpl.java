@@ -101,17 +101,30 @@ public class AlertLogServiceImpl implements AlertLogService {
             Region region = regionId != null ? regionRepository.findById(regionId).orElse(null) : null;
             Criterion criterion = criterionId != null ? criterionRepository.findById(criterionId).orElse(null) : null;
             
+            Short previousLevel = null;
+            if (regionId != null && criterionId != null) {
+                Alert previousAlert = alertRepository
+                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterionId, regionId)
+                    .orElse(null);
+                
+                if (previousAlert != null && !previousAlert.getId().equals(alertId)) {
+                    previousLevel = previousAlert.getLevel();
+                    log.debug("Found previous Alert ID {} with level {} for new Alert ID {}", 
+                        previousAlert.getId(), previousLevel, alertId);
+                }
+            }
+            
             AlertLog alertLog = AlertLog.builder()
                 .alert(alert)
                 .createdAt(LocalDateTime.now())
-                .previousLevel(null)
+                .previousLevel(previousLevel)
                 .newLevel(level)
                 .region(region)
                 .criterion(criterion)
                 .build();
             
             alertLogRepository.save(alertLog);
-            log.info("AlertLog created for new Alert ID: {}", alertId);
+            log.info("AlertLog created for new Alert ID: {} (previousLevel: {})", alertId, previousLevel);
             
         } catch (Exception e) {
             log.error("Error creating AlertLog for new alert {}: {}", alertId, e.getMessage(), e);
