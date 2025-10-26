@@ -28,6 +28,9 @@ public class Road {
     @Column(name = "roa_speed_limit")
     private BigDecimal speedLimit;
 
+    @Column(name = "roa_lanes")
+    private Integer lanes;
+
     @Column(name = "roa_created_at")
     private LocalDateTime createdAt;
 

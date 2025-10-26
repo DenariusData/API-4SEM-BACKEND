@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,12 +19,6 @@ public class SpeedViolationStatisticsService {
 
     @Autowired
     private RadarBaseDataRepository radarBaseDataRepository;
-    
-    @Autowired
-    private RoadRepository roadRepository;
-    
-    @Autowired
-    private CameraRepository cameraRepository;
     
     @Autowired
     private RegionRepository regionRepository;
@@ -38,34 +31,32 @@ public class SpeedViolationStatisticsService {
     
     private static final BigDecimal SPEED_VIOLATION_THRESHOLD = new BigDecimal("1.10");
     private static final String SPEED_VIOLATION_CRITERION_NAME = "Infrações por excesso de velocidade";
+    private static final int TIME_WINDOW_MINUTES = 20;
     
     @Transactional(readOnly = true)
-    public List<SpeedViolationStatisticsDTO> calculateStatistics(LocalDateTime mostRecentDate) {
+    public List<SpeedViolationStatisticsDTO> calculateStatistics(
+            LocalDateTime mostRecentDate,
+            Map<String, Road> roadCache,
+            Map<String, Region> regionCache) {
         try {
-            log.info("Calculating speed violation statistics...");
+            LocalDateTime timeWindowStart = mostRecentDate.minusMinutes(TIME_WINDOW_MINUTES);
             
-            LocalDateTime twentyMinutesBefore = mostRecentDate.minusMinutes(20);
+            List<RadarBaseData> recentRecords = radarBaseDataRepository
+                .findByDateTimeBetween(timeWindowStart, mostRecentDate);
             
-            List<RadarBaseData> lastTwentyMinutesRecords = radarBaseDataRepository
-                .findByDateTimeBetween(twentyMinutesBefore, mostRecentDate);
-            
-            if (lastTwentyMinutesRecords.isEmpty()) {
-                log.info("No records found in the last 20 minutes");
+            if (recentRecords.isEmpty()) {
+                log.info("No records found in the last {} minutes", TIME_WINDOW_MINUTES);
                 return Collections.emptyList();
             }
             
-            log.info("Processing {} records from last 20 minutes", lastTwentyMinutesRecords.size());
-            
-            Map<String, Road> roadCache = buildRoadCache(lastTwentyMinutesRecords);
-            
-            Map<Road, Region> regionCache = buildRegionCache(roadCache.values());
+            log.info("Processing {} records from last {} minutes for speed violation", recentRecords.size(), TIME_WINDOW_MINUTES);
             
             Map<String, List<RadarBaseData>> recordsByRegion = groupRecordsByRegion(
-                lastTwentyMinutesRecords, roadCache, regionCache);
+                recentRecords, roadCache, regionCache);
             
             List<SpeedViolationStatisticsDTO> statistics = calculateRegionStatistics(recordsByRegion);
             
-            processAlertsForStatistics(statistics, twentyMinutesBefore, mostRecentDate);
+            processAlertsForStatistics(statistics, timeWindowStart, mostRecentDate);
             
             return statistics;
         } catch (Exception e) {
@@ -74,37 +65,10 @@ public class SpeedViolationStatisticsService {
         }
     }
     
-    private Map<String, Road> buildRoadCache(List<RadarBaseData> records) {
-        Set<String> addresses = records.stream()
-            .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
-            .map(this::buildCompleteAddress)
-            .collect(Collectors.toSet());
-        
-        Map<String, Road> roadCache = new HashMap<>();
-        for (String address : addresses) {
-            roadRepository.findByAddress(address)
-                .ifPresent(road -> roadCache.put(address, road));
-        }
-        
-        return roadCache;
-    }
-    
-    private Map<Road, Region> buildRegionCache(Collection<Road> roads) {
-        Map<Road, Region> regionCache = new HashMap<>();
-        
-        for (Road road : roads) {
-            List<Camera> cameras = cameraRepository.findByRoad(road);
-            if (!cameras.isEmpty() && cameras.get(0).getRegion() != null) {
-                regionCache.put(road, cameras.get(0).getRegion());
-            }
-        }
-        return regionCache;
-    }
-    
     private Map<String, List<RadarBaseData>> groupRecordsByRegion(
             List<RadarBaseData> records,
             Map<String, Road> roadCache,
-            Map<Road, Region> regionCache) {
+            Map<String, Region> regionCache) {
         
         Map<String, List<RadarBaseData>> recordsByRegion = new HashMap<>();
         
@@ -113,17 +77,18 @@ public class SpeedViolationStatisticsService {
                 continue;
             }
             
-            String address = buildCompleteAddress(record);
-            Road road = roadCache.get(address);
+            if (record.getCameraLatitude() == null || record.getCameraLongitude() == null) {
+                continue;
+            }
             
-            if (road != null) {
-                Region region = regionCache.get(road);
-                if (region != null) {
-                    String regionName = region.getName();
-                    recordsByRegion
-                        .computeIfAbsent(regionName, k -> new ArrayList<>())
-                        .add(record);
-                }
+            String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
+            Region region = regionCache.get(coordinates);
+            
+            if (region != null) {
+                String regionName = region.getName();
+                recordsByRegion
+                    .computeIfAbsent(regionName, k -> new ArrayList<>())
+                    .add(record);
             }
         }
         
@@ -266,28 +231,14 @@ public class SpeedViolationStatisticsService {
     private short calculateAlertLevel(double violationRate) {
         double percentage = violationRate * 100;
         
-        if (percentage <= 0.5) return 1;
-        if (percentage <= 1.0) return 2;
-        if (percentage <= 2.0) return 3;
+        if (percentage <= 0.1) return 1;
+        if (percentage <= 0.5) return 2;
+        if (percentage <= 1.0) return 3;
         if (percentage <= 5.0) return 4;
         return 5;
     }
     
     private Region findRegionByName(String regionName) {
         return regionRepository.findByName(regionName).orElse(null);
-    }
-    
-    private String buildCompleteAddress(RadarBaseData record) {
-        StringBuilder address = new StringBuilder(record.getAddress());
-        
-        if (record.getNumber() != null && !record.getNumber().trim().isEmpty()) {
-            address.append(", ").append(record.getNumber());
-        }
-        
-        if (record.getCity() != null && !record.getCity().trim().isEmpty()) {
-            address.append(" - ").append(record.getCity());
-        }
-        
-        return address.toString();
     }
 }
