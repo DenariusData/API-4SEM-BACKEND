@@ -2,6 +2,7 @@ package data.denarius.radarius.service.impl;
 
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
+import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
 import data.denarius.radarius.entity.*;
 import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.AlertService;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +24,8 @@ public class AlertServiceImpl implements AlertService {
 
     @Autowired
     private AlertRepository alertRepository;
+    @Autowired
+    private AlertLogRepository alertLogRepository;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
@@ -67,11 +71,18 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<AlertResponseDTO> getLast10AlertsByRegion(Integer regionId) {
-        Pageable pageable = PageRequest.of(0, 10);
-        return alertRepository.findTop10ByRegion(regionId, pageable)
-                .stream()
-                .map(this::mapToDTO)
+    public List<AlertLogRecentResponseDTO> getLast10AlertLogs(Integer regionId) {
+        List<AlertLog> alertLogs;
+        
+        if (regionId == null) {
+            alertLogs = alertLogRepository.findTop10ByOrderByCreatedAtDesc();
+        } else {
+            Pageable pageable = PageRequest.of(0, 10);
+            alertLogs = alertLogRepository.findByRegionIdOrderByCreatedAtDesc(regionId, pageable);
+        }
+        
+        return alertLogs.stream()
+                .map(this::mapAlertLogToRecentDTO)
                 .collect(Collectors.toList());
     }
 
@@ -139,5 +150,41 @@ public class AlertServiceImpl implements AlertService {
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
         dto.setProtocolName(alert.getProtocol() != null ? alert.getProtocol().getName() : null);
         return dto;
+    }
+    
+    private AlertLogRecentResponseDTO mapAlertLogToRecentDTO(AlertLog alertLog) {
+        return AlertLogRecentResponseDTO.builder()
+                .id(alertLog.getId())
+                .alertId(alertLog.getAlert() != null ? alertLog.getAlert().getId() : null)
+                .indicator(alertLog.getCriterion() != null ? alertLog.getCriterion().getName() : null)
+                .previousLevel(alertLog.getPreviousLevel())
+                .newLevel(alertLog.getNewLevel())
+                .location(alertLog.getRegion() != null ? alertLog.getRegion().getName() : null)
+                .timestamp(calculateTimeAgo(alertLog.getCreatedAt()))
+                .finalized(alertLog.getClosedAt() != null)
+                .build();
+    }
+    
+    private String calculateTimeAgo(LocalDateTime createdAt) {
+        if (createdAt == null) {
+            return "N/A";
+        }
+        
+        Duration duration = Duration.between(createdAt, LocalDateTime.now());
+        
+        long seconds = duration.getSeconds();
+        long minutes = duration.toMinutes();
+        long hours = duration.toHours();
+        long days = duration.toDays();
+        
+        if (days > 0) {
+            return days == 1 ? "1 dia" : days + " dias";
+        } else if (hours > 0) {
+            return hours == 1 ? "1 hora" : hours + " horas";
+        } else if (minutes > 0) {
+            return minutes == 1 ? "1 minuto" : minutes + " minutos";
+        } else {
+            return seconds <= 1 ? "agora" : seconds + " segundos";
+        }
     }
 }
