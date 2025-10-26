@@ -3,8 +3,11 @@ package data.denarius.radarius.scheduler;
 import data.denarius.radarius.entity.*;
 import data.denarius.radarius.enums.VehicleTypeEnum;
 import data.denarius.radarius.repository.*;
+import data.denarius.radarius.service.CongestionStatisticsService;
 import data.denarius.radarius.service.GeolocationService;
+import data.denarius.radarius.service.LargeVehicleStatisticsService;
 import data.denarius.radarius.service.SpeedViolationStatisticsService;
+import data.denarius.radarius.service.VehicleDensityStatisticsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +44,15 @@ public class RadarBaseDataScheduler {
     
     @Autowired
     private SpeedViolationStatisticsService speedViolationStatisticsService;
+    
+    @Autowired
+    private CongestionStatisticsService congestionStatisticsService;
+    
+    @Autowired
+    private VehicleDensityStatisticsService vehicleDensityStatisticsService;
+    
+    @Autowired
+    private LargeVehicleStatisticsService largeVehicleStatisticsService;
     
     private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
     private static final String DEFAULT_REGION_NAME = "Centro";
@@ -106,6 +118,7 @@ public class RadarBaseDataScheduler {
                             road = Road.builder()
                                 .address(completeAddress)
                                 .speedLimit(new BigDecimal(record.getSpeedLimit()))
+                                .lanes(record.getTotalLanes())
                                 .createdAt(LocalDateTime.now())
                                 .build();
                             newRoads.add(road);
@@ -213,7 +226,14 @@ public class RadarBaseDataScheduler {
                     .orElse(null);
                     
                 if (mostRecentRecord != null) {
-                    speedViolationStatisticsService.calculateStatistics(mostRecentRecord.getDateTime());
+                    LocalDateTime referenceTime = mostRecentRecord.getDateTime();
+                    
+                    Map<String, Region> regionCache = buildRegionCacheForStatistics(unprocessedRecords);
+                    
+                    speedViolationStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
+                    congestionStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
+                    vehicleDensityStatisticsService.calculateStatistics(referenceTime, regionCache);
+                    largeVehicleStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
                 }
             }
             
@@ -255,6 +275,38 @@ public class RadarBaseDataScheduler {
                 camera -> camera
             ));
     }
+    
+    private Map<String, Region> buildRegionCacheForStatistics(List<RadarBaseData> records) {
+        Map<String, Region> regionCache = new HashMap<>();
+        
+        Map<String, BigDecimal[]> uniqueCoordinates = new HashMap<>();
+        for (RadarBaseData record : records) {
+            if (record.getCameraLatitude() != null && record.getCameraLongitude() != null) {
+                String key = record.getCameraLatitude() + "," + record.getCameraLongitude();
+                uniqueCoordinates.putIfAbsent(key, new BigDecimal[]{
+                    record.getCameraLatitude(), 
+                    record.getCameraLongitude()
+                });
+            }
+        }
+        
+        if (uniqueCoordinates.isEmpty()) {
+            return regionCache;
+        }
+        
+        for (Map.Entry<String, BigDecimal[]> entry : uniqueCoordinates.entrySet()) {
+            String coordinates = entry.getKey();
+            BigDecimal latitude = entry.getValue()[0];
+            BigDecimal longitude = entry.getValue()[1];
+            
+            Region region = determineRegionFromCoordinates(latitude, longitude);
+            if (region != null) {
+                regionCache.put(coordinates, region);
+            }
+        }
+        
+        return regionCache;
+    }
 
     @Transactional
     private void processIndividualRecord(RadarBaseData record) {
@@ -288,6 +340,7 @@ public class RadarBaseDataScheduler {
             Road newRoad = Road.builder()
                     .address(completeAddress)
                     .speedLimit(new BigDecimal(record.getSpeedLimit()))
+                    .lanes(record.getTotalLanes())
                     .createdAt(LocalDateTime.now())
                     .build();
             
