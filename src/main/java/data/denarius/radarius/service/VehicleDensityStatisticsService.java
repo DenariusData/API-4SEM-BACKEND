@@ -134,24 +134,20 @@ public class VehicleDensityStatisticsService {
             int numberOfLanes = road.getLanes() != null ? road.getLanes() : 2;
             BigDecimal availableSpace = RADAR_VISION_METERS.multiply(new BigDecimal(numberOfLanes));
             
-            // Agrupar registros por segundo para calcular densidade instantânea
             Map<LocalDateTime, List<RadarBaseData>> recordsBySecond = records.stream()
                 .filter(r -> r.getVehicleType() != null && r.getDateTime() != null)
                 .collect(Collectors.groupingBy(r -> r.getDateTime().withNano(0)));
             
-            // Calcular densidade média ao longo do tempo
             double totalDensityPercentage = 0.0;
             int validSeconds = 0;
             
             for (List<RadarBaseData> secondRecords : recordsBySecond.values()) {
-                // Calcular espaço ocupado neste segundo específico
                 BigDecimal occupiedSpaceInSecond = secondRecords.stream()
                     .map(r -> VehicleSpaceEnum.fromString(r.getVehicleType()))
                     .filter(vehicleType -> !vehicleType.isExcludedFromDensityCalculation())
                     .map(VehicleSpaceEnum::getSpaceOccupied)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
                 
-                // Calcular densidade para este segundo
                 double densityInSecond = occupiedSpaceInSecond
                     .divide(availableSpace, 4, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal("100"))
@@ -161,11 +157,9 @@ public class VehicleDensityStatisticsService {
                 validSeconds++;
             }
             
-            // Densidade média ao longo dos 20 minutos
             Double averageDensityPercentage = validSeconds > 0 ? 
                 totalDensityPercentage / validSeconds : 0.0;
             
-            // Calcular espaço ocupado total para informação
             BigDecimal totalOccupiedSpace = records.stream()
                 .filter(r -> r.getVehicleType() != null)
                 .map(r -> VehicleSpaceEnum.fromString(r.getVehicleType()))
@@ -173,10 +167,21 @@ public class VehicleDensityStatisticsService {
                 .map(VehicleSpaceEnum::getSpaceOccupied)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            // Buscar região usando as coordenadas da câmera
             Region region = regionCache.get(cameraCoordinates);
+            
+            if (region == null && camera.getRegion() != null) {
+                region = camera.getRegion();
+                log.debug("Region not found in cache for camera {}, using camera's region: {}", 
+                    cameraCoordinates, region.getName());
+            }
+            
             String regionName = region != null ? region.getName() : "N/A";
             String cameraLocation = road.getAddress();
+            
+            if (region == null) {
+                log.warn("Unable to determine region for camera at {} (Road: {})", 
+                    cameraCoordinates, cameraLocation);
+            }
             
             statistics.add(VehicleDensityStatisticsDTO.builder()
                 .regionName(regionName)
@@ -210,7 +215,6 @@ public class VehicleDensityStatisticsService {
                 return;
             }
             
-            // Agrupar estatísticas por região e calcular média ponderada
             Map<String, List<VehicleDensityStatisticsDTO>> statsByRegion = statistics.stream()
                 .collect(Collectors.groupingBy(VehicleDensityStatisticsDTO::getRegionName));
             
@@ -218,7 +222,6 @@ public class VehicleDensityStatisticsService {
                 String regionName = entry.getKey();
                 List<VehicleDensityStatisticsDTO> regionStats = entry.getValue();
                 
-                // Calcular densidade média ponderada pelo número de veículos
                 long totalVehicles = regionStats.stream()
                     .mapToLong(VehicleDensityStatisticsDTO::getTotalVehicles)
                     .sum();
@@ -235,7 +238,6 @@ public class VehicleDensityStatisticsService {
                     .map(VehicleDensityStatisticsDTO::getAvailableSpace)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
                 
-                // Criar DTO consolidado para a região
                 VehicleDensityStatisticsDTO regionalStat = VehicleDensityStatisticsDTO.builder()
                     .regionName(regionName)
                     .cameraId(null)
@@ -262,9 +264,6 @@ public class VehicleDensityStatisticsService {
             String regionName = stat.getRegionName();
             double densityPercentage = stat.getDensityPercentage();
             short newLevel = calculateAlertLevel(densityPercentage);
-            
-            log.info("Vehicle Density - Region: {}, Density: {}%, Calculated Level: {}", 
-                regionName, String.format("%.2f", densityPercentage), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {

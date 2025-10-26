@@ -125,13 +125,19 @@ public class LargeVehicleStatisticsService {
                 (double) largeVehicles / totalVehicles * 100.0 : 0.0;
             
             String regionName = "N/A";
+            Region region = null;
+            
             if (!validRecords.isEmpty()) {
                 RadarBaseData firstRecord = validRecords.get(0);
                 if (firstRecord.getCameraLatitude() != null && firstRecord.getCameraLongitude() != null) {
                     String coordinates = firstRecord.getCameraLatitude() + "," + firstRecord.getCameraLongitude();
-                    Region region = regionCache.get(coordinates);
+                    region = regionCache.get(coordinates);
+                    
                     if (region != null) {
                         regionName = region.getName();
+                    } else {
+                        log.debug("Region not found in cache for coordinates {} on road {}", 
+                            coordinates, roadAddress);
                     }
                 }
             }
@@ -166,7 +172,6 @@ public class LargeVehicleStatisticsService {
                 return;
             }
             
-            // Agrupar estatísticas por região e calcular média ponderada
             Map<String, List<LargeVehicleStatisticsDTO>> statsByRegion = statistics.stream()
                 .collect(Collectors.groupingBy(LargeVehicleStatisticsDTO::getRegionName));
             
@@ -174,7 +179,6 @@ public class LargeVehicleStatisticsService {
                 String regionName = entry.getKey();
                 List<LargeVehicleStatisticsDTO> regionStats = entry.getValue();
                 
-                // Calcular percentual médio ponderado pelo número de veículos
                 long totalVehicles = regionStats.stream()
                     .mapToLong(LargeVehicleStatisticsDTO::getTotalVehicles)
                     .sum();
@@ -186,7 +190,6 @@ public class LargeVehicleStatisticsService {
                 double weightedPercentage = totalVehicles > 0 ? 
                     (double) totalLargeVehicles / totalVehicles * 100.0 : 0.0;
                 
-                // Criar DTO consolidado para a região
                 LargeVehicleStatisticsDTO regionalStat = LargeVehicleStatisticsDTO.builder()
                     .regionName(regionName)
                     .roadAddress(regionStats.size() + " roads")
@@ -211,9 +214,6 @@ public class LargeVehicleStatisticsService {
             String regionName = stat.getRegionName();
             double largeVehiclePercentage = stat.getLargeVehiclePercentage();
             short newLevel = calculateAlertLevel(largeVehiclePercentage);
-            
-            log.info("Large Vehicle - Region: {}, Percentage: {}%, Calculated Level: {}", 
-                regionName, String.format("%.2f", largeVehiclePercentage), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {

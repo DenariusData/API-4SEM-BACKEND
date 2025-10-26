@@ -166,9 +166,6 @@ public class SpeedViolationStatisticsService {
             double violationRate = stat.getViolationRate();
             short newLevel = calculateAlertLevel(violationRate);
             
-            log.info("Speed Violation - Region: {}, Violation Rate: {}%, Calculated Level: {}", 
-                regionName, String.format("%.2f", violationRate * 100), newLevel);
-            
             Region region = findRegionByName(regionName);
             if (region == null) {
                 log.warn("  - Region '{}' not found in database", regionName);
@@ -234,9 +231,9 @@ public class SpeedViolationStatisticsService {
     private short calculateAlertLevel(double violationRate) {
         double percentage = violationRate * 100;
         
-        if (percentage <= 0.5) return 1;
-        if (percentage <= 1.0) return 2;
-        if (percentage <= 2.0) return 3;
+        if (percentage <= 0.1) return 1;
+        if (percentage <= 0.5) return 2;
+        if (percentage <= 1.0) return 3;
         if (percentage <= 5.0) return 4;
         return 5;
     }

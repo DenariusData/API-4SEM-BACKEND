@@ -132,13 +132,19 @@ public class CongestionStatisticsService {
             }
             
             String regionName = "N/A";
+            Region region = null;
+            
             if (!validRecords.isEmpty()) {
                 RadarBaseData firstRecord = validRecords.get(0);
                 if (firstRecord.getCameraLatitude() != null && firstRecord.getCameraLongitude() != null) {
                     String coordinates = firstRecord.getCameraLatitude() + "," + firstRecord.getCameraLongitude();
-                    Region region = regionCache.get(coordinates);
+                    region = regionCache.get(coordinates);
+                    
                     if (region != null) {
                         regionName = region.getName();
+                    } else {
+                        log.debug("Region not found in cache for coordinates {} on road {}", 
+                            coordinates, roadAddress);
                     }
                 }
             }
@@ -174,7 +180,6 @@ public class CongestionStatisticsService {
                 return;
             }
             
-            // Agrupar estatísticas por região e calcular média ponderada
             Map<String, List<CongestionStatisticsDTO>> statsByRegion = statistics.stream()
                 .collect(Collectors.groupingBy(CongestionStatisticsDTO::getRegionName));
             
@@ -182,7 +187,6 @@ public class CongestionStatisticsService {
                 String regionName = entry.getKey();
                 List<CongestionStatisticsDTO> regionStats = entry.getValue();
                 
-                // Calcular congestionamento médio ponderado pelo número de veículos
                 long totalVehicles = regionStats.stream()
                     .mapToLong(CongestionStatisticsDTO::getTotalVehicles)
                     .sum();
@@ -191,7 +195,6 @@ public class CongestionStatisticsService {
                     .mapToDouble(stat -> stat.getCongestionPercentage() * stat.getTotalVehicles())
                     .sum() / totalVehicles;
                 
-                // Criar DTO consolidado para a região
                 CongestionStatisticsDTO regionalStat = CongestionStatisticsDTO.builder()
                     .regionName(regionName)
                     .roadAddress(regionStats.size() + " roads")
@@ -222,11 +225,6 @@ public class CongestionStatisticsService {
             String regionName = stat.getRegionName();
             double congestionPercentage = stat.getCongestionPercentage();
             short newLevel = calculateAlertLevel(congestionPercentage);
-            
-            log.info("Congestion - Region: {}, Congestion: {}%, Avg Speed: {} km/h, Limit: {} km/h, Calculated Level: {}", 
-                regionName, String.format("%.2f", congestionPercentage), 
-                String.format("%.2f", stat.getAverageSpeed()), 
-                String.format("%.2f", stat.getSpeedLimit()), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {
