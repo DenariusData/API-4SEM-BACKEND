@@ -23,9 +23,6 @@ import java.util.List;
 @Slf4j
 @Service
 public class AlertLogServiceImpl implements AlertLogService {
-
-    private final Short ACCEPTABLE_LEVEL = 2;
-
     @Autowired
     private AlertLogRepository alertLogRepository;
     @Autowired
@@ -34,54 +31,6 @@ public class AlertLogServiceImpl implements AlertLogService {
     private RegionRepository regionRepository;
     @Autowired
     private CriterionRepository criterionRepository;
-
-    @Override
-    @Transactional
-    public AlertLog create(Short newLevel, Criterion criterion, Region region) {
-
-        AlertLog newAlertLog = AlertLog.builder()
-                .region(region)
-                .criterion(criterion)
-                .newLevel(newLevel)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        AlertLog previousAlertLog = alertLogRepository
-                .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
-                .orElse(null);
-        Short previousLevel = previousAlertLog == null ? ACCEPTABLE_LEVEL : previousAlertLog.getNewLevel();
-        newAlertLog.setPreviousLevel(previousLevel);
-
-        Alert alert = alertRepository
-                .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
-                .orElse(null);
-
-        if (newLevel > ACCEPTABLE_LEVEL) {
-            if (alert == null || alert.getClosedAt() != null) {
-                Alert newAlert = Alert.builder()
-                        .message("Nível acima do aceitável na região " + region.getName() +
-                                " para o critério " + criterion.getName())
-                        .level(newLevel)
-                        .createdAt(LocalDateTime.now())
-                        .region(region)
-                        .criterion(criterion)
-                        .build();
-                alertRepository.save(newAlert);
-                newAlertLog.setAlert(newAlert);
-            } else {
-                alert.setLevel(newLevel);
-                alertRepository.save(alert);
-                newAlertLog.setAlert(alert);
-            }
-        } else if (alert != null && alert.getClosedAt() == null) {
-            alert.setClosedAt(LocalDateTime.now());
-            alertRepository.save(alert);
-            newAlertLog.setAlert(alert);
-        }
-
-
-        return alertLogRepository.save(newAlertLog);
-    }
 
 
     @Override

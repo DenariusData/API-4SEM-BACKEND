@@ -166,6 +166,9 @@ public class SpeedViolationStatisticsService {
             double violationRate = stat.getViolationRate();
             short newLevel = calculateAlertLevel(violationRate);
             
+            log.info("Speed Violation - Region: {}, Violation Rate: {}%, Calculated Level: {}", 
+                regionName, String.format("%.2f", violationRate * 100), newLevel);
+            
             Region region = findRegionByName(regionName);
             if (region == null) {
                 log.warn("  - Region '{}' not found in database", regionName);

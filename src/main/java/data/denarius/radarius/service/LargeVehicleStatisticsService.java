@@ -166,8 +166,36 @@ public class LargeVehicleStatisticsService {
                 return;
             }
             
-            for (LargeVehicleStatisticsDTO stat : statistics) {
-                processAlertForRegion(stat, largeVehicleCriterion, end);
+            // Agrupar estatísticas por região e calcular média ponderada
+            Map<String, List<LargeVehicleStatisticsDTO>> statsByRegion = statistics.stream()
+                .collect(Collectors.groupingBy(LargeVehicleStatisticsDTO::getRegionName));
+            
+            for (Map.Entry<String, List<LargeVehicleStatisticsDTO>> entry : statsByRegion.entrySet()) {
+                String regionName = entry.getKey();
+                List<LargeVehicleStatisticsDTO> regionStats = entry.getValue();
+                
+                // Calcular percentual médio ponderado pelo número de veículos
+                long totalVehicles = regionStats.stream()
+                    .mapToLong(LargeVehicleStatisticsDTO::getTotalVehicles)
+                    .sum();
+                
+                long totalLargeVehicles = regionStats.stream()
+                    .mapToLong(LargeVehicleStatisticsDTO::getLargeVehicles)
+                    .sum();
+                
+                double weightedPercentage = totalVehicles > 0 ? 
+                    (double) totalLargeVehicles / totalVehicles * 100.0 : 0.0;
+                
+                // Criar DTO consolidado para a região
+                LargeVehicleStatisticsDTO regionalStat = LargeVehicleStatisticsDTO.builder()
+                    .regionName(regionName)
+                    .roadAddress(regionStats.size() + " roads")
+                    .totalVehicles(totalVehicles)
+                    .largeVehicles(totalLargeVehicles)
+                    .largeVehiclePercentage(weightedPercentage)
+                    .build();
+                
+                processAlertForRegion(regionalStat, largeVehicleCriterion, end);
             }
         } catch (Exception e) {
             log.error("Error processing alerts for large vehicle statistics: {}", e.getMessage(), e);
@@ -183,6 +211,9 @@ public class LargeVehicleStatisticsService {
             String regionName = stat.getRegionName();
             double largeVehiclePercentage = stat.getLargeVehiclePercentage();
             short newLevel = calculateAlertLevel(largeVehiclePercentage);
+            
+            log.info("Large Vehicle - Region: {}, Percentage: {}%, Calculated Level: {}", 
+                regionName, String.format("%.2f", largeVehiclePercentage), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {

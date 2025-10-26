@@ -183,8 +183,43 @@ public class VehicleDensityStatisticsService {
                 return;
             }
             
-            for (VehicleDensityStatisticsDTO stat : statistics) {
-                processAlertForRegion(stat, densityCriterion, end);
+            // Agrupar estatísticas por região e calcular média ponderada
+            Map<String, List<VehicleDensityStatisticsDTO>> statsByRegion = statistics.stream()
+                .collect(Collectors.groupingBy(VehicleDensityStatisticsDTO::getRegionName));
+            
+            for (Map.Entry<String, List<VehicleDensityStatisticsDTO>> entry : statsByRegion.entrySet()) {
+                String regionName = entry.getKey();
+                List<VehicleDensityStatisticsDTO> regionStats = entry.getValue();
+                
+                // Calcular densidade média ponderada pelo número de veículos
+                long totalVehicles = regionStats.stream()
+                    .mapToLong(VehicleDensityStatisticsDTO::getTotalVehicles)
+                    .sum();
+                
+                double weightedDensity = regionStats.stream()
+                    .mapToDouble(stat -> stat.getDensityPercentage() * stat.getTotalVehicles())
+                    .sum() / totalVehicles;
+                
+                BigDecimal totalOccupied = regionStats.stream()
+                    .map(VehicleDensityStatisticsDTO::getOccupiedSpace)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                BigDecimal totalAvailable = regionStats.stream()
+                    .map(VehicleDensityStatisticsDTO::getAvailableSpace)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                // Criar DTO consolidado para a região
+                VehicleDensityStatisticsDTO regionalStat = VehicleDensityStatisticsDTO.builder()
+                    .regionName(regionName)
+                    .cameraId(null)
+                    .cameraLocation(regionStats.size() + " cameras")
+                    .totalVehicles(totalVehicles)
+                    .occupiedSpace(totalOccupied)
+                    .availableSpace(totalAvailable)
+                    .densityPercentage(weightedDensity)
+                    .build();
+                
+                processAlertForRegion(regionalStat, densityCriterion, end);
             }
         } catch (Exception e) {
             log.error("Error processing alerts for density statistics: {}", e.getMessage(), e);
@@ -200,6 +235,9 @@ public class VehicleDensityStatisticsService {
             String regionName = stat.getRegionName();
             double densityPercentage = stat.getDensityPercentage();
             short newLevel = calculateAlertLevel(densityPercentage);
+            
+            log.info("Vehicle Density - Region: {}, Density: {}%, Calculated Level: {}", 
+                regionName, String.format("%.2f", densityPercentage), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {

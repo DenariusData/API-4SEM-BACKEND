@@ -174,8 +174,39 @@ public class CongestionStatisticsService {
                 return;
             }
             
-            for (CongestionStatisticsDTO stat : statistics) {
-                processAlertForRegion(stat, congestionCriterion, end);
+            // Agrupar estatísticas por região e calcular média ponderada
+            Map<String, List<CongestionStatisticsDTO>> statsByRegion = statistics.stream()
+                .collect(Collectors.groupingBy(CongestionStatisticsDTO::getRegionName));
+            
+            for (Map.Entry<String, List<CongestionStatisticsDTO>> entry : statsByRegion.entrySet()) {
+                String regionName = entry.getKey();
+                List<CongestionStatisticsDTO> regionStats = entry.getValue();
+                
+                // Calcular congestionamento médio ponderado pelo número de veículos
+                long totalVehicles = regionStats.stream()
+                    .mapToLong(CongestionStatisticsDTO::getTotalVehicles)
+                    .sum();
+                
+                double weightedCongestion = regionStats.stream()
+                    .mapToDouble(stat -> stat.getCongestionPercentage() * stat.getTotalVehicles())
+                    .sum() / totalVehicles;
+                
+                // Criar DTO consolidado para a região
+                CongestionStatisticsDTO regionalStat = CongestionStatisticsDTO.builder()
+                    .regionName(regionName)
+                    .roadAddress(regionStats.size() + " roads")
+                    .totalVehicles(totalVehicles)
+                    .averageSpeed(regionStats.stream()
+                        .mapToDouble(s -> s.getAverageSpeed() * s.getTotalVehicles())
+                        .sum() / totalVehicles)
+                    .speedLimit(regionStats.stream()
+                        .mapToDouble(CongestionStatisticsDTO::getSpeedLimit)
+                        .average()
+                        .orElse(0))
+                    .congestionPercentage(weightedCongestion)
+                    .build();
+                
+                processAlertForRegion(regionalStat, congestionCriterion, end);
             }
         } catch (Exception e) {
             log.error("Error processing alerts for congestion statistics: {}", e.getMessage(), e);
@@ -191,6 +222,11 @@ public class CongestionStatisticsService {
             String regionName = stat.getRegionName();
             double congestionPercentage = stat.getCongestionPercentage();
             short newLevel = calculateAlertLevel(congestionPercentage);
+            
+            log.info("Congestion - Region: {}, Congestion: {}%, Avg Speed: {} km/h, Limit: {} km/h, Calculated Level: {}", 
+                regionName, String.format("%.2f", congestionPercentage), 
+                String.format("%.2f", stat.getAverageSpeed()), 
+                String.format("%.2f", stat.getSpeedLimit()), newLevel);
             
             Region region = findRegionByName(regionName);
             if (region == null) {
