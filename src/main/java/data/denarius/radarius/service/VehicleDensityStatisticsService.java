@@ -131,22 +131,49 @@ public class VehicleDensityStatisticsService {
             }
             
             Road road = camera.getRoad();
+            int numberOfLanes = road.getLanes() != null ? road.getLanes() : 2;
+            BigDecimal availableSpace = RADAR_VISION_METERS.multiply(new BigDecimal(numberOfLanes));
             
-            BigDecimal occupiedSpace = records.stream()
+            // Agrupar registros por segundo para calcular densidade instantânea
+            Map<LocalDateTime, List<RadarBaseData>> recordsBySecond = records.stream()
+                .filter(r -> r.getVehicleType() != null && r.getDateTime() != null)
+                .collect(Collectors.groupingBy(r -> r.getDateTime().withNano(0)));
+            
+            // Calcular densidade média ao longo do tempo
+            double totalDensityPercentage = 0.0;
+            int validSeconds = 0;
+            
+            for (List<RadarBaseData> secondRecords : recordsBySecond.values()) {
+                // Calcular espaço ocupado neste segundo específico
+                BigDecimal occupiedSpaceInSecond = secondRecords.stream()
+                    .map(r -> VehicleSpaceEnum.fromString(r.getVehicleType()))
+                    .filter(vehicleType -> !vehicleType.isExcludedFromDensityCalculation())
+                    .map(VehicleSpaceEnum::getSpaceOccupied)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                
+                // Calcular densidade para este segundo
+                double densityInSecond = occupiedSpaceInSecond
+                    .divide(availableSpace, 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal("100"))
+                    .doubleValue();
+                
+                totalDensityPercentage += densityInSecond;
+                validSeconds++;
+            }
+            
+            // Densidade média ao longo dos 20 minutos
+            Double averageDensityPercentage = validSeconds > 0 ? 
+                totalDensityPercentage / validSeconds : 0.0;
+            
+            // Calcular espaço ocupado total para informação
+            BigDecimal totalOccupiedSpace = records.stream()
                 .filter(r -> r.getVehicleType() != null)
                 .map(r -> VehicleSpaceEnum.fromString(r.getVehicleType()))
                 .filter(vehicleType -> !vehicleType.isExcludedFromDensityCalculation())
                 .map(VehicleSpaceEnum::getSpaceOccupied)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            int numberOfLanes = road.getLanes() != null ? road.getLanes() : 2;
-            BigDecimal availableSpace = RADAR_VISION_METERS.multiply(new BigDecimal(numberOfLanes));
-            
-            Double densityPercentage = occupiedSpace
-                .divide(availableSpace, 4, RoundingMode.HALF_UP)
-                .multiply(new BigDecimal("100"))
-                .doubleValue();
-            
+            // Buscar região usando as coordenadas da câmera
             Region region = regionCache.get(cameraCoordinates);
             String regionName = region != null ? region.getName() : "N/A";
             String cameraLocation = road.getAddress();
@@ -156,9 +183,9 @@ public class VehicleDensityStatisticsService {
                 .cameraId(camera.getId())
                 .cameraLocation(cameraLocation)
                 .totalVehicles((long) records.size())
-                .occupiedSpace(occupiedSpace)
+                .occupiedSpace(totalOccupiedSpace)
                 .availableSpace(availableSpace)
-                .densityPercentage(densityPercentage)
+                .densityPercentage(averageDensityPercentage)
                 .build());
         }
         
