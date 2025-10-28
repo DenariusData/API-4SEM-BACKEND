@@ -1,0 +1,455 @@
+package data.denarius.radarius.scheduler;
+
+import data.denarius.radarius.entity.*;
+import data.denarius.radarius.enums.VehicleTypeEnum;
+import data.denarius.radarius.repository.*;
+import data.denarius.radarius.service.CongestionStatisticsService;
+import data.denarius.radarius.service.GeolocationService;
+import data.denarius.radarius.service.LargeVehicleStatisticsService;
+import data.denarius.radarius.service.SpeedViolationStatisticsService;
+import data.denarius.radarius.service.VehicleDensityStatisticsService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Component
+public class RadarBaseDataScheduler {
+
+    @Autowired
+    private RadarBaseDataRepository radarBaseDataRepository;
+    
+    @Autowired
+    private CameraRepository cameraRepository;
+    
+    @Autowired
+    private RoadRepository roadRepository;
+    
+    @Autowired
+    private RegionRepository regionRepository;
+    
+    @Autowired
+    private ReadingRepository readingRepository;
+
+    @Autowired
+    private GeolocationService geolocationService;
+    
+    @Autowired
+    private SpeedViolationStatisticsService speedViolationStatisticsService;
+    
+    @Autowired
+    private CongestionStatisticsService congestionStatisticsService;
+    
+    @Autowired
+    private VehicleDensityStatisticsService vehicleDensityStatisticsService;
+    
+    @Autowired
+    private LargeVehicleStatisticsService largeVehicleStatisticsService;
+    
+    private static final int UNPROCESSED_RECORDS_BATCH_SIZE = 1000;
+    private static final String DEFAULT_REGION_NAME = "Centro";
+
+    @Scheduled(fixedRate = 3 * (60 * 1000))
+    @Transactional
+    public void processRadarBaseDataAndGenerateAlerts() {
+        try {
+            log.info("Starting radar base data processing...");
+            
+            List<RadarBaseData> unprocessedRecords = radarBaseDataRepository
+                    .findUnprocessedRecordsOrderByOldest(PageRequest.of(0, UNPROCESSED_RECORDS_BATCH_SIZE));
+            
+            if (unprocessedRecords.isEmpty()) {
+                return;
+            }
+            
+            log.info("Found {} unprocessed records", unprocessedRecords.size());
+            
+            processUnprocessedData(unprocessedRecords);
+            
+            log.info("Completed radar base data processing");
+        } catch (Exception e) {
+            log.error("Error in scheduler: {}", e.getMessage(), e);
+        }
+    }
+    
+    private void processUnprocessedData(List<RadarBaseData> unprocessedRecords) {
+        try {
+            Map<String, Road> roadCache = buildRoadCache(unprocessedRecords);
+            Map<String, Camera> cameraCache = buildCameraCache(unprocessedRecords);
+            
+            List<Road> newRoads = new ArrayList<>();
+            List<Camera> newCameras = new ArrayList<>();
+            List<Reading> newReadings = new ArrayList<>();
+            List<Long> processedIds = new ArrayList<>();
+            
+            int totalProcessed = 0;
+            
+            for (RadarBaseData record : unprocessedRecords) {
+                try {
+                    if (record.getCameraLatitude() == null || record.getCameraLongitude() == null) {
+                        log.warn("Record ID {} has invalid coordinates, skipping", record.getId());
+                        continue;
+                    }
+                    
+                    if (record.getAddress() == null || record.getAddress().trim().isEmpty()) {
+                        log.warn("Record ID {} has invalid address, skipping", record.getId());
+                        continue;
+                    }
+                    
+                    String completeAddress = buildCompleteAddress(record);
+                    String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
+                    
+                    Road road = roadCache.get(completeAddress);
+                    if (road == null) {
+                        road = newRoads.stream()
+                            .filter(r -> r.getAddress().equals(completeAddress))
+                            .findFirst()
+                            .orElse(null);
+                        
+                        if (road == null) {
+                            road = Road.builder()
+                                .address(completeAddress)
+                                .speedLimit(new BigDecimal(record.getSpeedLimit()))
+                                .lanes(record.getTotalLanes())
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                            newRoads.add(road);
+                        }
+                    }
+                    
+                    Region region = determineRegionFromCoordinates(
+                        record.getCameraLatitude(), 
+                        record.getCameraLongitude()
+                    );
+                    
+                    Camera camera = cameraCache.get(coordinates);
+                    if (camera == null) {
+                        camera = newCameras.stream()
+                            .filter(c -> c.getLatitude().equals(record.getCameraLatitude()) 
+                                      && c.getLongitude().equals(record.getCameraLongitude()))
+                            .findFirst()
+                            .orElse(null);
+                        
+                        if (camera == null) {
+                            camera = Camera.builder()
+                                .latitude(record.getCameraLatitude())
+                                .longitude(record.getCameraLongitude())
+                                .active(true)
+                                .createdAt(LocalDateTime.now())
+                                .road(road)
+                                .region(region)
+                                .build();
+                            newCameras.add(camera);
+                        }
+                    }
+                    
+                    Reading reading = Reading.builder()
+                        .createdAt(record.getDateTime() != null ? record.getDateTime() : LocalDateTime.now())
+                        .vehicleType(VehicleTypeEnum.fromString(record.getVehicleType()))
+                        .speed(record.getVehicleSpeed())
+                        .plate(null)
+                        .camera(camera)
+                        .build();
+                    newReadings.add(reading);
+                    
+                    processedIds.add(record.getId());
+                    totalProcessed++;
+
+                    if (totalProcessed % 100 == 0) {
+                        log.info("Processed {} records so far...", totalProcessed);
+                    }
+                } catch (Exception e) {
+                    log.error("Error processing record ID {}: {}", record.getId(), e.getMessage(), e);
+                }
+            }
+            
+            if (!newRoads.isEmpty()) {
+                log.info("Saving {} new roads in batch", newRoads.size());
+                List<Road> savedRoads = roadRepository.saveAll(newRoads);
+                
+                Map<String, Road> savedRoadsMap = savedRoads.stream()
+                    .collect(Collectors.toMap(Road::getAddress, r -> r));
+                
+                for (Camera camera : newCameras) {
+                    if (camera.getRoad() != null && camera.getRoad().getId() == null) {
+                        Road savedRoad = savedRoadsMap.get(camera.getRoad().getAddress());
+                        if (savedRoad != null) {
+                            camera.setRoad(savedRoad);
+                        }
+                    }
+                }
+            }
+            
+            if (!newCameras.isEmpty()) {
+                List<Camera> savedCameras = cameraRepository.saveAll(newCameras);
+                
+                Map<String, Camera> savedCamerasMap = savedCameras.stream()
+                    .collect(Collectors.toMap(
+                        c -> c.getLatitude() + "," + c.getLongitude(),
+                        c -> c
+                    ));
+                
+                for (Reading reading : newReadings) {
+                    if (reading.getCamera() != null && reading.getCamera().getId() == null) {
+                        String cameraKey = reading.getCamera().getLatitude() + "," + reading.getCamera().getLongitude();
+                        Camera savedCamera = savedCamerasMap.get(cameraKey);
+                        if (savedCamera != null) {
+                            reading.setCamera(savedCamera);
+                        }
+                    }
+                }
+            }
+            
+            if (!newReadings.isEmpty()) {
+                readingRepository.saveAll(newReadings);
+            }
+            
+            if (!processedIds.isEmpty()) {
+                radarBaseDataRepository.markMultipleAsProcessed(processedIds);
+            }
+            
+            log.info("Completed processing {} records (Roads: {}, Cameras: {}, Readings: {})", 
+                totalProcessed, newRoads.size(), newCameras.size(), newReadings.size());
+            
+            if (!unprocessedRecords.isEmpty()) {
+                RadarBaseData mostRecentRecord = unprocessedRecords.stream()
+                    .filter(r -> r.getDateTime() != null)
+                    .max(Comparator.comparing(RadarBaseData::getDateTime))
+                    .orElse(null);
+                    
+                if (mostRecentRecord != null) {
+                    LocalDateTime referenceTime = mostRecentRecord.getDateTime();
+                    
+                    Map<String, Region> regionCache = buildRegionCacheForStatistics(unprocessedRecords);
+                    
+                    speedViolationStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
+                    congestionStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
+                    vehicleDensityStatisticsService.calculateStatistics(referenceTime, regionCache);
+                    largeVehicleStatisticsService.calculateStatistics(referenceTime, roadCache, regionCache);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("General error in radar base data processing: {}", e.getMessage(), e);
+        }
+    }
+    
+    private Map<String, Road> buildRoadCache(List<RadarBaseData> records) {
+        Set<String> addresses = records.stream()
+            .filter(r -> r.getAddress() != null && !r.getAddress().trim().isEmpty())
+            .map(this::buildCompleteAddress)
+            .collect(Collectors.toSet());
+        
+        if (addresses.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        List<Road> existingRoads = roadRepository.findByAddressIn(addresses);
+        
+        return existingRoads.stream()
+            .collect(Collectors.toMap(Road::getAddress, road -> road));
+    }
+    
+    private Map<String, Camera> buildCameraCache(List<RadarBaseData> records) {
+        List<RadarBaseData> validRecords = records.stream()
+            .filter(r -> r.getCameraLatitude() != null && r.getCameraLongitude() != null)
+            .collect(Collectors.toList());
+        
+        if (validRecords.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        List<Camera> existingCameras = cameraRepository.findAll();
+        
+        return existingCameras.stream()
+            .collect(Collectors.toMap(
+                camera -> camera.getLatitude() + "," + camera.getLongitude(),
+                camera -> camera
+            ));
+    }
+    
+    private Map<String, Region> buildRegionCacheForStatistics(List<RadarBaseData> records) {
+        Map<String, Region> regionCache = new HashMap<>();
+        
+        Map<String, BigDecimal[]> uniqueCoordinates = new HashMap<>();
+        for (RadarBaseData record : records) {
+            if (record.getCameraLatitude() != null && record.getCameraLongitude() != null) {
+                String key = record.getCameraLatitude() + "," + record.getCameraLongitude();
+                uniqueCoordinates.putIfAbsent(key, new BigDecimal[]{
+                    record.getCameraLatitude(), 
+                    record.getCameraLongitude()
+                });
+            }
+        }
+        
+        if (uniqueCoordinates.isEmpty()) {
+            return regionCache;
+        }
+        
+        for (Map.Entry<String, BigDecimal[]> entry : uniqueCoordinates.entrySet()) {
+            String coordinates = entry.getKey();
+            BigDecimal latitude = entry.getValue()[0];
+            BigDecimal longitude = entry.getValue()[1];
+            
+            Region region = determineRegionFromCoordinates(latitude, longitude);
+            if (region != null) {
+                regionCache.put(coordinates, region);
+            }
+        }
+        
+        return regionCache;
+    }
+
+    @Transactional
+    private void processIndividualRecord(RadarBaseData record) {
+        log.debug("Processing radar data record ID: {}", record.getId());
+        
+        if (record.getCameraLatitude() == null || record.getCameraLongitude() == null) {
+            log.warn("Record ID {} has invalid coordinates, skipping processing", record.getId());
+            return;
+        }
+        
+        if (record.getAddress() == null || record.getAddress().trim().isEmpty()) {
+            log.warn("Record ID {} has invalid address, skipping processing", record.getId());
+            return;
+        }
+        
+        Road road = createOrGetRoad(record);
+        Region region = determineRegionFromCoordinates(record.getCameraLatitude(), record.getCameraLongitude());
+        createOrGetCamera(record, road, region);
+    }
+    
+    private Road createOrGetRoad(RadarBaseData record) {
+        String completeAddress = buildCompleteAddress(record);
+        
+        try {
+            Optional<Road> existingRoad = roadRepository.findByAddress(completeAddress);
+            
+            if (existingRoad.isPresent()) {
+                return existingRoad.get();
+            }
+            
+            Road newRoad = Road.builder()
+                    .address(completeAddress)
+                    .speedLimit(new BigDecimal(record.getSpeedLimit()))
+                    .lanes(record.getTotalLanes())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            
+            return roadRepository.save(newRoad);
+            
+        } catch (Exception e) {
+            log.warn("Error creating Road for address '{}', trying to search again: {}", completeAddress, e.getMessage());
+            
+            Optional<Road> existingRoad = roadRepository.findByAddress(completeAddress);
+            if (existingRoad.isPresent()) {
+                log.info("Road found after error: {}", completeAddress);
+                return existingRoad.get();
+            }
+            
+            throw new RuntimeException("Could not create or find Road for address: " + completeAddress, e);
+        }
+    }
+    
+    private Camera createOrGetCamera(RadarBaseData record, Road road, Region region) {
+        String coordinates = record.getCameraLatitude() + "," + record.getCameraLongitude();
+        
+        try {
+            Optional<Camera> existingCamera = cameraRepository
+                    .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
+            
+            if (existingCamera.isPresent()) {
+                return existingCamera.get();
+            }
+            
+            synchronized (this) {
+                existingCamera = cameraRepository
+                        .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
+                
+                if (existingCamera.isPresent()) {
+                    return existingCamera.get();
+                }
+                
+                Camera newCamera = Camera.builder()
+                        .latitude(record.getCameraLatitude())
+                        .longitude(record.getCameraLongitude())
+                        .active(true)
+                        .createdAt(LocalDateTime.now())
+                        .road(road)
+                        .region(region)
+                        .build();
+                
+                return cameraRepository.save(newCamera);
+            }
+            
+        } catch (Exception e) {
+            log.warn("Error with Camera for coordinates '{}', trying final search: {}", coordinates, e.getMessage());
+            
+            Optional<Camera> existingCamera = cameraRepository
+                    .findByLatitudeAndLongitude(record.getCameraLatitude(), record.getCameraLongitude());
+            
+            if (existingCamera.isPresent()) {
+                log.info("Camera found in final search: {}", coordinates);
+                return existingCamera.get();
+            }
+            
+            log.error("Could not create or find Camera for coordinates: {}", coordinates, e);
+            throw new RuntimeException("Could not create or find Camera for coordinates: " + coordinates, e);
+        }
+    }
+    
+    private Region determineRegionFromCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        Optional<Region> regionOpt = geolocationService.determineRegionFromCoordinates(latitude, longitude);
+        
+        if (regionOpt.isPresent()) {
+            return regionOpt.get();
+        } else {
+            log.warn("No region found for coordinates ({}, {}), using default region", latitude, longitude);
+            return createOrGetDefaultRegion();
+        }
+    }
+    
+    private Region createOrGetDefaultRegion() {
+        try {
+            return regionRepository.findByName(DEFAULT_REGION_NAME)
+                    .orElseGet(() -> {
+                        Region newRegion = Region.builder()
+                                .name(DEFAULT_REGION_NAME)
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return regionRepository.save(newRegion);
+                    });
+        } catch (Exception e) {
+            log.warn("Error creating default Region, trying to search again: {}", e.getMessage());
+            return regionRepository.findByName(DEFAULT_REGION_NAME)
+                    .orElseThrow(() -> new RuntimeException("Could not create or find default Region", e));
+        }
+    }
+    
+    private String buildCompleteAddress(RadarBaseData record) {
+        StringBuilder address = new StringBuilder(record.getAddress());
+        
+        if (record.getNumber() != null && !record.getNumber().trim().isEmpty()) {
+            address.append(", ").append(record.getNumber());
+        }
+        
+        if (record.getCity() != null && !record.getCity().trim().isEmpty()) {
+            address.append(" - ").append(record.getCity());
+        }
+        
+        return address.toString();
+    }
+    
+    public void forceProcessing() {
+        log.info("Processing forced via endpoint");
+        processRadarBaseDataAndGenerateAlerts();
+    }
+}
