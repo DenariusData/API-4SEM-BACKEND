@@ -54,7 +54,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public Optional<Person> findByEmail(String email) {
-        return Optional.empty();
+        return personRepository.findByEmail(email);
     }
 
     private Person mapToEntity(PersonRequestDTO dto) {

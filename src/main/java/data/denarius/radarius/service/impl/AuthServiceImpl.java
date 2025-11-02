@@ -22,7 +22,7 @@ public class AuthServiceImpl implements AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
         var userPrincipal = (UserPrincipal)auth.getPrincipal();
-        var token = jwtIssuer.issue(userPrincipal.getUserId(), userPrincipal.getEmail());
-        return new LoginResponseDTO(token);
+        var token = jwtIssuer.issue(userPrincipal.getUserId(), userPrincipal.getEmail(), userPrincipal.getRole().toString());
+        return new LoginResponseDTO(token, userPrincipal.getRole());
     }
 }
