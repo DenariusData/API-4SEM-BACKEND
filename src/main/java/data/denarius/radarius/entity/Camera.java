@@ -42,9 +42,6 @@ public class Camera {
     @OneToMany(mappedBy = "camera")
     private List<Reading> readings;
 
-    @OneToMany(mappedBy = "camera")
-    private List<Alert> alerts;
-
     @ManyToOne
     @JoinColumn(name = "reg_id")
     private Region region;

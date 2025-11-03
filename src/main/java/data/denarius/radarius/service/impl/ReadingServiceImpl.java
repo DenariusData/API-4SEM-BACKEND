@@ -64,7 +64,6 @@ public class ReadingServiceImpl implements ReadingService {
         reading.setCreatedAt(dto.getCreatedAt());
         reading.setVehicleType(dto.getVehicleType());
         reading.setSpeed(dto.getSpeed());
-        reading.setPlate(dto.getPlate());
 
         if (dto.getCameraId() != null)
             reading.setCamera(cameraRepository.findById(dto.getCameraId()).orElse(null));
@@ -76,7 +75,6 @@ public class ReadingServiceImpl implements ReadingService {
         dto.setCreatedAt(reading.getCreatedAt());
         dto.setVehicleType(reading.getVehicleType());
         dto.setSpeed(reading.getSpeed());
-        dto.setPlate(reading.getPlate());
         dto.setCameraRegion(reading.getCamera() != null && reading.getCamera().getRegion() != null
                 ? reading.getCamera().getRegion().getName() : null);
         return dto;

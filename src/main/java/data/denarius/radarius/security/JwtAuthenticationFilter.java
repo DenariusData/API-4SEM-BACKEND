@@ -24,6 +24,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
+        if (request.getRequestURI().equals("/auth/login")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         extractTokenFromRequest(request)
                 .map(tokenDecoder::decode)
                 .map(JwtToPrincipalConverter::convert)

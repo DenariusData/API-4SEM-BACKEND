@@ -36,22 +36,18 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         http
-            .cors(cors ->
-                cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
-                    config.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
-                    config.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
-                    config.setAllowCredentials(true);
-                    config.setMaxAge(3600L);
-                    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                    source.registerCorsConfiguration("/**", config);
-                    return config;
-                })
-            )
+            .cors(cors -> {
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+                config.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
+                config.setAllowedHeaders(Arrays.asList("*"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
+                source.registerCorsConfiguration("/**", config);
+                cors.configurationSource(source);
+            })
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -29,8 +29,6 @@ public class AlertServiceImpl implements AlertService {
     @Autowired
     private PersonRepository personRepository;
     @Autowired
-    private CameraRepository cameraRepository;
-    @Autowired
     private CriterionRepository criterionRepository;
     @Autowired
     private RootCauseRepository rootCauseRepository;
@@ -89,7 +87,6 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public Page<AlertResponseDTO> getAlertsWithFilters(
             List<Integer> regionIds,
-            Integer cameraId,
             LocalDateTime startDate,
             LocalDateTime endDate,
             int page,
@@ -97,7 +94,7 @@ public class AlertServiceImpl implements AlertService {
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         List<Integer> regionIdsParam = (regionIds == null) ? null : regionIds;
-        Page<Alert> alerts = alertRepository.findWithFilters(regionIdsParam, cameraId, startDate, endDate, pageable);
+        Page<Alert> alerts = alertRepository.findWithFilters(regionIdsParam, startDate, endDate, pageable);
         return alerts.map(this::mapToDTO);
     }
 
@@ -121,9 +118,6 @@ public class AlertServiceImpl implements AlertService {
 
         if (dto.getAssignedToId() != null)
             alert.setAssignedTo(personRepository.findById(dto.getAssignedToId()).orElse(null));
-
-        if (dto.getCameraId() != null)
-            alert.setCamera(cameraRepository.findById(dto.getCameraId()).orElse(null));
 
         if (dto.getCriterionId() != null)
             alert.setCriterion(criterionRepository.findById(dto.getCriterionId()).orElse(null));

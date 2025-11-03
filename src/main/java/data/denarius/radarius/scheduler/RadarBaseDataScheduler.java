@@ -155,7 +155,6 @@ public class RadarBaseDataScheduler {
                         .createdAt(record.getDateTime() != null ? record.getDateTime() : LocalDateTime.now())
                         .vehicleType(VehicleTypeEnum.fromString(record.getVehicleType()))
                         .speed(record.getVehicleSpeed())
-                        .plate(null)
                         .camera(camera)
                         .build();
                     newReadings.add(reading);
