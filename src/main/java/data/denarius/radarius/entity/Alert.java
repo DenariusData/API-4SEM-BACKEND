@@ -51,12 +51,8 @@ public class Alert {
     @JoinColumn(name = "ale_assigned_to")
     private Person assignedTo;
 
-    @ManyToOne
-    @JoinColumn(name = "cam_id")
-    private Camera camera;
-
-    @ManyToOne
-    @JoinColumn(name = "cri_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "cri_id", nullable = false)
     private Criterion criterion;
 
     @ManyToOne
@@ -73,7 +69,7 @@ public class Alert {
     @OneToMany(mappedBy = "alert")
     private List<AlertLog> logs;
 
-    @ManyToOne
-    @JoinColumn(name = "reg_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "reg_id", nullable = false)
     private Region region;
 }
