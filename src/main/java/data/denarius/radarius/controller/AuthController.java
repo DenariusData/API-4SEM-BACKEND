@@ -1,5 +1,6 @@
 package data.denarius.radarius.controller;
 
+import data.denarius.radarius.dto.error.ErrorResponse;
 import data.denarius.radarius.dto.login.LoginRequestDTO;
 import data.denarius.radarius.dto.login.LoginResponseDTO;
 import data.denarius.radarius.service.AuthService;
@@ -19,7 +20,16 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) throws AuthenticationException {
-        return ResponseEntity.ok(authService.login(dto.email(), dto.password()));
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+        try {
+            LoginResponseDTO response = authService.login(dto.email(), dto.password());
+            return ResponseEntity.ok(response);
+        } catch (AuthenticationException | org.springframework.security.core.AuthenticationException e) {
+            return ResponseEntity.status(401).body(new ErrorResponse(
+                "Unauthorized",
+                "Usuário inexistente ou senha inválida",
+                401
+            ));
+        }
     }
 }
