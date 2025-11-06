@@ -23,7 +23,6 @@ public interface AlertService {
 
     Page<AlertResponseDTO> getAlertsWithFilters(
             List<Integer> regionIds,
-            Integer cameraId,
             LocalDateTime startDate,
             LocalDateTime endDate,
             int page,

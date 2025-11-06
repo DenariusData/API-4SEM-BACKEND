@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -19,7 +17,8 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) throws AuthenticationException {
-        return ResponseEntity.ok(authService.login(dto.email(), dto.password()));
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+        LoginResponseDTO response = authService.login(dto.email(), dto.password());
+        return ResponseEntity.ok(response);
     }
 }

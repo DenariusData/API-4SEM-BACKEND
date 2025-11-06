@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 public class AlertNotificationServiceImpl implements AlertNotificationService {
@@ -17,8 +19,8 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
     @Autowired
     private TelegramService telegramService;
 
-    @Value("${telegram.chat.id}")
-    private String chatId;
+    @Value("#{'${telegram.chat.ids}'.split(',')}")
+    private List<String> chatIds;
 
     @Override
     public void notifyAlertLogCreated(AlertLog alertLog) {
@@ -46,9 +48,12 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
 
             String message = buildTelegramMessage(region, criterion, previousLevel, newLevel, alertLog);
 
-            telegramService.sendMessage(chatId, message);
+            for (String chatId : chatIds) {
+                telegramService.sendMessage(chatId, message);
+            }
             
-            log.info("Telegram notification sent for AlertLog ID {} - Region: {}, Criterion: {}, Level: {} -> {}",
+            log.info("Telegram notifications sent to {} recipients for AlertLog ID {} - Region: {}, Criterion: {}, Level: {} -> {}",
+                    chatIds.size(),
                     alertLog.getId(),
                     region != null ? region.getName() : "N/A",
                     criterion != null ? criterion.getName() : "N/A",

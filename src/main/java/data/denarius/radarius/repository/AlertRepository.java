@@ -32,27 +32,24 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         FROM Alert a
         LEFT JOIN a.logs al
         WHERE (:regionIds IS NULL OR al.region.id IN :regionIds)
-        AND (:cameraId IS NULL OR a.camera.id = :cameraId)
         AND (:startDate IS NULL OR a.createdAt >= :startDate)
         AND (:endDate IS NULL OR a.createdAt <= :endDate)
         ORDER BY a.createdAt DESC
     """)
     Page<Alert> findWithFilters(@Param("regionIds") List<Integer> regionIds,
-            @Param("cameraId") Integer cameraId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
     Optional<Alert> findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(Integer criterionId, Integer regionId);
     
-    Optional<Alert> findTopBySourceTypeAndCriterionIdAndCameraIdAndRegionIdOrderByCreatedAtDesc(
-        SourceTypeEnum sourceType, Integer criterionId, Integer cameraId, Integer regionId);
+    Optional<Alert> findTopBySourceTypeAndCriterionIdAndRegionIdOrderByCreatedAtDesc(
+        SourceTypeEnum sourceType, Integer criterionId, Integer regionId);
     
-    @Query("SELECT a FROM Alert a WHERE a.sourceType = :sourceType AND a.criterion.id = :criterionId AND a.camera.id = :cameraId AND a.region.id = :regionId AND a.closedAt IS NULL ORDER BY a.createdAt DESC")
-    Optional<Alert> findActiveAlertBySourceTypeAndCriterionIdAndCameraIdAndRegionId(
+    @Query("SELECT a FROM Alert a WHERE a.sourceType = :sourceType AND a.criterion.id = :criterionId AND a.region.id = :regionId AND a.closedAt IS NULL ORDER BY a.createdAt DESC")
+    Optional<Alert> findActiveAlertBySourceTypeAndCriterionIdAndRegionId(
         @Param("sourceType") SourceTypeEnum sourceType, 
         @Param("criterionId") Integer criterionId, 
-        @Param("cameraId") Integer cameraId, 
         @Param("regionId") Integer regionId);
     
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.createdAt < :threshold")

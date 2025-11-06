@@ -54,7 +54,6 @@ public class AlertController {
     @GetMapping("/search")
     public ResponseEntity<Page<AlertResponseDTO>> getWithFilters(
             @RequestParam(required = false) List<Integer> regionIds,
-            @RequestParam(required = false) Integer cameraId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(defaultValue = "0") int page,
@@ -62,6 +61,6 @@ public class AlertController {
     ) {
         LocalDateTime start = startDate != null ? LocalDateTime.parse(startDate) : null;
         LocalDateTime end = endDate != null ? LocalDateTime.parse(endDate) : null;
-        return ResponseEntity.ok(alertService.getAlertsWithFilters(regionIds, cameraId, start, end, page, size));
+        return ResponseEntity.ok(alertService.getAlertsWithFilters(regionIds, start, end, page, size));
     }
 }

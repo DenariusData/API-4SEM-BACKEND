@@ -8,6 +8,7 @@ import data.denarius.radarius.service.PersonService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,9 @@ public class PersonServiceImpl implements PersonService {
 
     @Autowired
     private PersonRepository personRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public PersonResponseDTO create(PersonRequestDTO dto) {
@@ -54,7 +58,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public Optional<Person> findByEmail(String email) {
-        return Optional.empty();
+        return personRepository.findByEmail(email);
     }
 
     private Person mapToEntity(PersonRequestDTO dto) {
@@ -67,7 +71,9 @@ public class PersonServiceImpl implements PersonService {
         person.setName(dto.getName());
         person.setWhatsapp(dto.getWhatsapp());
         person.setEmail(dto.getEmail());
-        person.setPassword(dto.getPassword());
+        if (dto.getPassword() != null) {
+            person.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
         person.setRole(dto.getRole());
         person.setCreatedAt(dto.getCreatedAt());
     }
