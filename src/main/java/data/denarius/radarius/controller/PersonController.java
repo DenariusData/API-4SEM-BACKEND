@@ -4,6 +4,8 @@ import data.denarius.radarius.dto.person.PersonRequestDTO;
 import data.denarius.radarius.dto.person.PersonResponseDTO;
 import data.denarius.radarius.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,8 +34,8 @@ public class PersonController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PersonResponseDTO>> findAll() {
-        return ResponseEntity.ok(personService.findAll());
+    public ResponseEntity<Page<PersonResponseDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(personService.findAll(pageable));
     }
 
     @DeleteMapping("/{id}")
