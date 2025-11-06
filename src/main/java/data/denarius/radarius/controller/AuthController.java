@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.AuthenticationException;
 
 import javax.naming.AuthenticationException;
 
@@ -24,7 +25,7 @@ public class AuthController {
         try {
             LoginResponseDTO response = authService.login(dto.email(), dto.password());
             return ResponseEntity.ok(response);
-        } catch (AuthenticationException | org.springframework.security.core.AuthenticationException e) {
+        } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(new ErrorResponse(
                 "Unauthorized",
                 "Usuário inexistente ou senha inválida",

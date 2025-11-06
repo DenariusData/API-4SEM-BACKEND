@@ -5,10 +5,10 @@ import data.denarius.radarius.dto.person.PersonResponseDTO;
 import data.denarius.radarius.entity.Person;
 import data.denarius.radarius.repository.PersonRepository;
 import data.denarius.radarius.service.PersonService;
-import data.denarius.radarius.service.PasswordService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -64,15 +64,12 @@ public class PersonServiceImpl implements PersonService {
         return person;
     }
 
-    @Autowired
-    private PasswordService passwordService;
-
     private void updateEntity(Person person, PersonRequestDTO dto) {
         person.setName(dto.getName());
         person.setWhatsapp(dto.getWhatsapp());
         person.setEmail(dto.getEmail());
         if (dto.getPassword() != null) {
-            person.setPassword(passwordService.encodePassword(dto.getPassword()));
+            person.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         person.setRole(dto.getRole());
         person.setCreatedAt(dto.getCreatedAt());
