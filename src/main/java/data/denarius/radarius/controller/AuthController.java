@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.AuthenticationException;
 
-import javax.naming.AuthenticationException;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -22,14 +20,14 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) throws javax.naming.AuthenticationException {
         try {
             LoginResponseDTO response = authService.login(dto.email(), dto.password());
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
-                "Usuário inexistente ou senha inválida"
+                "Falha na autenticação: E-mail ou senha inválidos. Por favor, verifique suas credenciais."
             );
             problemDetail.setTitle("Unauthorized");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
