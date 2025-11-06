@@ -28,6 +28,7 @@ public class PersonServiceImpl implements PersonService {
     private RegionRepository regionRepository;
 
     @Override
+    @Transactional
     public PersonResponseDTO create(PersonRequestDTO dto) {
         Person person = mapToEntity(dto);
         return mapToDTO(personRepository.save(person));
@@ -87,7 +88,7 @@ public class PersonServiceImpl implements PersonService {
             person.setPassword(dto.getPassword());
         }
         person.setRole(dto.getRole());
-        person.setCreatedAt(dto.getCreatedAt());if (dto.getRegions() != null && !dto.getRegions().isEmpty()) {
+        if (dto.getRegions() != null && !dto.getRegions().isEmpty()) {
             person.setRegions(
                     dto.getRegions().stream()
                             .map(regionDTO -> regionRepository.findById(regionDTO.getId())
