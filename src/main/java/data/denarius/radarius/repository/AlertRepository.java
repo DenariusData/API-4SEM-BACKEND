@@ -73,4 +73,13 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         @Param("regionId") Integer regionId, 
         @Param("excludeId") Integer excludeId,
         Pageable pageable);
+
+    List<Alert> findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(Integer regionId);
+
+    List<Alert> findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(
+            Integer regionId, Integer criterionId);
+
 }
+
+
+

@@ -63,4 +63,18 @@ public class AlertController {
         LocalDateTime end = endDate != null ? LocalDateTime.parse(endDate) : null;
         return ResponseEntity.ok(alertService.getAlertsWithFilters(regionIds, start, end, page, size));
     }
+
+    @GetMapping("/top5/region/{regionId}")
+    public ResponseEntity<List<AlertResponseDTO>> getTop5ByRegion(@PathVariable Integer regionId) {
+        return ResponseEntity.ok(alertService.getTop5WorstByRegion(regionId));
+    }
+
+    @GetMapping("/top5/region/{regionId}/criterion/{criterionId}")
+    public ResponseEntity<List<AlertResponseDTO>> getTop5ByRegionAndCriterion(
+            @PathVariable Integer regionId,
+            @PathVariable Integer criterionId
+    ) {
+        return ResponseEntity.ok(alertService.getTop5WorstByRegionAndCriterion(regionId, criterionId));
+    }
+
 }
