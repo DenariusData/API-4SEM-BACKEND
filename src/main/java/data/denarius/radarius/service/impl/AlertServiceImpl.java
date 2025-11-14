@@ -99,16 +99,16 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<AlertResponseDTO> getTop5ByRegion(Integer regionId) {
-        return alertRepository.findTop5ByRegion_IdOrderByLevelDesc(regionId)
+    public List<AlertResponseDTO> getTop5WorstByRegion(Integer regionId) {
+        return alertRepository.findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(regionId)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<AlertResponseDTO> getTop5ByRegionAndCriterion(Integer regionId, Integer criterionId) {
-        return alertRepository.findTop5ByRegion_IdAndCriterion_IdOrderByLevelDesc(regionId, criterionId)
+    public List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(Integer regionId, Integer criterionId) {
+        return alertRepository.findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(regionId, criterionId)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());

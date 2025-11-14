@@ -66,7 +66,7 @@ public class AlertController {
 
     @GetMapping("/top5/region/{regionId}")
     public ResponseEntity<List<AlertResponseDTO>> getTop5ByRegion(@PathVariable Integer regionId) {
-        return ResponseEntity.ok(alertService.getTop5ByRegion(regionId));
+        return ResponseEntity.ok(alertService.getTop5WorstByRegion(regionId));
     }
 
     @GetMapping("/top5/region/{regionId}/criterion/{criterionId}")
@@ -74,7 +74,7 @@ public class AlertController {
             @PathVariable Integer regionId,
             @PathVariable Integer criterionId
     ) {
-        return ResponseEntity.ok(alertService.getTop5ByRegionAndCriterion(regionId, criterionId));
+        return ResponseEntity.ok(alertService.getTop5WorstByRegionAndCriterion(regionId, criterionId));
     }
 
 }
