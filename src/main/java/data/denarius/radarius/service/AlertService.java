@@ -29,4 +29,8 @@ public interface AlertService {
             int size
     );
 
+    List<AlertResponseDTO> getTop5ByRegion(Integer regionId);
+
+    List<AlertResponseDTO> getTop5ByRegionAndCriterion(Integer regionId, Integer criterionId);
+
 }
