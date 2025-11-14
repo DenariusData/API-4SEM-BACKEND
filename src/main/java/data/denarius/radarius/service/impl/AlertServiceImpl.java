@@ -98,6 +98,23 @@ public class AlertServiceImpl implements AlertService {
         return alerts.map(this::mapToDTO);
     }
 
+    @Override
+    public List<AlertResponseDTO> getTop5ByRegion(Integer regionId) {
+        return alertRepository.findTop5ByRegion_IdOrderByLevelDesc(regionId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AlertResponseDTO> getTop5ByRegionAndCriterion(Integer regionId, Integer criterionId) {
+        return alertRepository.findTop5ByRegion_IdAndCriterion_IdOrderByLevelDesc(regionId, criterionId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
 
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
