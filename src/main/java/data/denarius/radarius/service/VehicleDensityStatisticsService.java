@@ -238,10 +238,15 @@ public class VehicleDensityStatisticsService {
                     .map(VehicleDensityStatisticsDTO::getAvailableSpace)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
                 
+                String representativeCameraLocation = regionStats.stream()
+                    .max(Comparator.comparing(VehicleDensityStatisticsDTO::getDensityPercentage))
+                    .map(VehicleDensityStatisticsDTO::getCameraLocation)
+                    .orElse("múltiplas localidades");
+                
                 VehicleDensityStatisticsDTO regionalStat = VehicleDensityStatisticsDTO.builder()
                     .regionName(regionName)
                     .cameraId(null)
-                    .cameraLocation(regionStats.size() + " cameras")
+                    .cameraLocation(representativeCameraLocation)
                     .totalVehicles(totalVehicles)
                     .occupiedSpace(totalOccupied)
                     .availableSpace(totalAvailable)

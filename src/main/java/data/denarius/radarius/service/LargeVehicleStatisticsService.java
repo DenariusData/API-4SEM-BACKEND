@@ -190,9 +190,14 @@ public class LargeVehicleStatisticsService {
                 double weightedPercentage = totalVehicles > 0 ? 
                     (double) totalLargeVehicles / totalVehicles * 100.0 : 0.0;
                 
+                String representativeRoadAddress = regionStats.stream()
+                    .max(Comparator.comparing(LargeVehicleStatisticsDTO::getLargeVehiclePercentage))
+                    .map(LargeVehicleStatisticsDTO::getRoadAddress)
+                    .orElse("múltiplas localidades");
+                
                 LargeVehicleStatisticsDTO regionalStat = LargeVehicleStatisticsDTO.builder()
                     .regionName(regionName)
-                    .roadAddress(regionStats.size() + " roads")
+                    .roadAddress(representativeRoadAddress)
                     .totalVehicles(totalVehicles)
                     .largeVehicles(totalLargeVehicles)
                     .largeVehiclePercentage(weightedPercentage)

@@ -195,9 +195,14 @@ public class CongestionStatisticsService {
                     .mapToDouble(stat -> stat.getCongestionPercentage() * stat.getTotalVehicles())
                     .sum() / totalVehicles;
                 
+                String representativeRoadAddress = regionStats.stream()
+                    .max(Comparator.comparing(CongestionStatisticsDTO::getCongestionPercentage))
+                    .map(CongestionStatisticsDTO::getRoadAddress)
+                    .orElse("múltiplas localidades");
+                
                 CongestionStatisticsDTO regionalStat = CongestionStatisticsDTO.builder()
                     .regionName(regionName)
-                    .roadAddress(regionStats.size() + " roads")
+                    .roadAddress(representativeRoadAddress)
                     .totalVehicles(totalVehicles)
                     .averageSpeed(regionStats.stream()
                         .mapToDouble(s -> s.getAverageSpeed() * s.getTotalVehicles())
