@@ -275,25 +275,21 @@ public class VehicleDensityStatisticsService {
                 .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
                 .orElse(null);
             
+            String newMessage = buildAlertMessage(region, stat);
+            
             if (openAlert != null) {
-                if (openAlert.getLevel() != newLevel) {
+                boolean needsUpdate = !newMessage.equals(openAlert.getMessage()) || 
+                                    openAlert.getLevel() != newLevel;
+                
+                if (needsUpdate) {
                     openAlert.setLevel(newLevel);
+                    openAlert.setMessage(newMessage);
                     alertRepository.save(openAlert);
-                    log.debug("Updated open Alert ID {} for region '{}': level {} -> {}", 
-                        openAlert.getId(), regionName, openAlert.getLevel(), newLevel);
+                    log.debug("Updated open Alert ID {} for region '{}'", openAlert.getId(), regionName);
                 }
             } else {
-                Alert lastAlert = alertRepository
-                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
-                    .orElse(null);
-                
-                if (lastAlert == null || lastAlert.getLevel() != newLevel) {
-                    createNewAlert(region, criterion, newLevel, stat, timestamp);
-                    log.debug("Created new Alert for region '{}' with level {} (previous level: {})", 
-                        regionName, newLevel, lastAlert != null ? lastAlert.getLevel() : "none");
-                } else {
-                    log.debug("No Alert created for region '{}' - level unchanged at {}", regionName, newLevel);
-                }
+                createNewAlert(region, criterion, newLevel, newMessage, timestamp);
+                log.debug("Created new Alert for region '{}' with level {}", regionName, newLevel);
             }
         } catch (Exception e) {
             log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
@@ -304,17 +300,8 @@ public class VehicleDensityStatisticsService {
             Region region,
             Criterion criterion,
             short level,
-            VehicleDensityStatisticsDTO stat,
+            String message,
             LocalDateTime timestamp) {
-        
-        String message = String.format(
-            "Densidade de veículos em região %s (câmera em %s): %.2f%% (%.2fm ocupados de %.2fm disponíveis)",
-            region.getName(),
-            stat.getCameraLocation(),
-            stat.getDensityPercentage(),
-            stat.getOccupiedSpace(),
-            stat.getAvailableSpace()
-        );
         
         Alert newAlert = Alert.builder()
             .level(level)
@@ -326,6 +313,17 @@ public class VehicleDensityStatisticsService {
             .build();
         
         alertRepository.save(newAlert);
+    }
+    
+    private String buildAlertMessage(Region region, VehicleDensityStatisticsDTO stat) {
+        return String.format(
+            "Densidade de veículos em região %s (câmera em %s): %.2f%% (%.2fm ocupados de %.2fm disponíveis)",
+            region.getName(),
+            stat.getCameraLocation(),
+            stat.getDensityPercentage(),
+            stat.getOccupiedSpace(),
+            stat.getAvailableSpace()
+        );
     }
     
     private short calculateAlertLevel(double densityPercentage) {
