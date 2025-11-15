@@ -258,7 +258,7 @@ public class LargeVehicleStatisticsService {
             LocalDateTime timestamp) {
         
         String message = String.format(
-            "Large vehicle circulation in region %s (road: %s): %.2f%% (%d of %d vehicles)",
+            " Circulação de veículos grandes em região %s (rodovia: %s): %.2f%% (%d de %d veículos)",
             region.getName(),
             stat.getRoadAddress(),
             stat.getLargeVehiclePercentage(),

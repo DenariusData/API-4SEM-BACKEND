@@ -308,7 +308,7 @@ public class VehicleDensityStatisticsService {
             LocalDateTime timestamp) {
         
         String message = String.format(
-            "Vehicle density in region %s (camera at %s): %.2f%% (%.2fm occupied of %.2fm available)",
+            "Densidade de veículos em região %s (câmera em %s): %.2f%% (%.2fm ocupados de %.2fm disponíveis)",
             region.getName(),
             stat.getCameraLocation(),
             stat.getDensityPercentage(),

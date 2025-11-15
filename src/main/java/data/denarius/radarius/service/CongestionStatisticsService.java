@@ -269,7 +269,7 @@ public class CongestionStatisticsService {
             LocalDateTime timestamp) {
         
         String message = String.format(
-            "Congestion in region %s (road: %s): %.2f%% (avg speed: %.2f km/h, limit: %.2f km/h)",
+            "Congestionamento em região %s (rodovia: %s): %.2f%% (velocidade média: %.2f km/h, limite: %.2f km/h)",
             region.getName(),
             stat.getRoadAddress(),
             stat.getCongestionPercentage(),

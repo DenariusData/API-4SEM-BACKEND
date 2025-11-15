@@ -209,7 +209,7 @@ public class SpeedViolationStatisticsService {
             LocalDateTime timestamp) {
         
         String message = String.format(
-            "Speed violation rate in region %s: %.2f%% (%d of %d vehicles exceeding limit by 10%% or more)",
+            "Infração de velocidade em região %s: %.2f%% (%d de %d veículos excedendo o limite em 10%% ou mais)",
             region.getName(),
             stat.getViolationRate() * 100,
             stat.getViolatingVehicles(),
