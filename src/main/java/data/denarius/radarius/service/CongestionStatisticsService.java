@@ -294,9 +294,9 @@ public class CongestionStatisticsService {
     
     private short calculateAlertLevel(double congestionPercentage) {
         if (congestionPercentage <= 20) return 1;
-        if (congestionPercentage <= 40) return 2;
-        if (congestionPercentage <= 60) return 3;
-        if (congestionPercentage <= 80) return 4;
+        if (congestionPercentage <= 30) return 2;
+        if (congestionPercentage <= 40) return 3;
+        if (congestionPercentage <= 50) return 4;
         return 5;
     }
     

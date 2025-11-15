@@ -230,9 +230,9 @@ public class SpeedViolationStatisticsService {
         double percentage = violationRate * 100;
         
         if (percentage <= 0.1) return 1;
-        if (percentage <= 0.5) return 2;
-        if (percentage <= 1.0) return 3;
-        if (percentage <= 5.0) return 4;
+        if (percentage <= 0.3) return 2;
+        if (percentage <= 0.5) return 3;
+        if (percentage <= 1.0) return 4;
         return 5;
     }
     

@@ -332,10 +332,10 @@ public class VehicleDensityStatisticsService {
     }
     
     private short calculateAlertLevel(double densityPercentage) {
-        if (densityPercentage <= 30) return 1;
-        if (densityPercentage <= 50) return 2;
-        if (densityPercentage <= 70) return 3;
-        if (densityPercentage <= 90) return 4;
+        if (densityPercentage <= 15) return 1;
+        if (densityPercentage <= 25) return 2;
+        if (densityPercentage <= 40) return 3;
+        if (densityPercentage <= 50) return 4;
         return 5;
     }
     
