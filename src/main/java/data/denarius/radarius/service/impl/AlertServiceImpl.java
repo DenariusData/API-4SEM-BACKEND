@@ -1,5 +1,6 @@
 package data.denarius.radarius.service.impl;
 
+import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
@@ -114,7 +115,12 @@ public class AlertServiceImpl implements AlertService {
                 .collect(Collectors.toList());
     }
 
-
+    @Override
+    public List<AlertLevelPerRegionDTO> getAverageLevelPerRegion() {
+        return alertRepository.findAverageLevelPerRegion().stream()
+                .map(this::mapToAlertLevelPerRegionDTO)
+                .collect(Collectors.toList());
+    }
 
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
@@ -158,6 +164,9 @@ public class AlertServiceImpl implements AlertService {
         dto.setCreatedByName(alert.getCreatedBy() != null ? alert.getCreatedBy().getName() : null);
         dto.setAssignedToName(alert.getAssignedTo() != null ? alert.getAssignedTo().getName() : null);
         dto.setCriterionName(alert.getCriterion() != null ? alert.getCriterion().getName() : null);
+        dto.setCriterionId(alert.getCriterion() != null ? alert.getCriterion().getId() : null);
+        dto.setRegionName(alert.getRegion() != null ? alert.getRegion().getName() : null);
+        dto.setRegionId(alert.getRegion() != null ? alert.getRegion().getId() : null);
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
         dto.setProtocolName(alert.getProtocol() != null ? alert.getProtocol().getName() : null);
         return dto;
@@ -173,6 +182,13 @@ public class AlertServiceImpl implements AlertService {
                 .location(alertLog.getRegion() != null ? alertLog.getRegion().getName() : null)
                 .timestamp(calculateTimeAgo(alertLog.getCreatedAt()))
                 .finalized(alertLog.getClosedAt() != null)
+                .build();
+    }
+
+    private AlertLevelPerRegionDTO mapToAlertLevelPerRegionDTO(java.util.Map<String, Object> map) {
+        return AlertLevelPerRegionDTO.builder()
+                .regionId(((Number) map.get("regionId")).intValue())
+                .level(((Number) map.get("level")).intValue())
                 .build();
     }
     

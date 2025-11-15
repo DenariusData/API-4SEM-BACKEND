@@ -1,5 +1,6 @@
 package data.denarius.radarius.controller;
 
+import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
@@ -75,6 +76,11 @@ public class AlertController {
             @PathVariable Integer criterionId
     ) {
         return ResponseEntity.ok(alertService.getTop5WorstByRegionAndCriterion(regionId, criterionId));
+    }
+
+    @GetMapping("/per-region")
+    public ResponseEntity<List<AlertLevelPerRegionDTO>> getAverageLevelPerRegion() {
+        return ResponseEntity.ok(alertService.getAverageLevelPerRegion());
     }
 
 }
