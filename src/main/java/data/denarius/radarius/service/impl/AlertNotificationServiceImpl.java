@@ -22,6 +22,9 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
     @Value("#{'${telegram.chat.ids}'.split(',')}")
     private List<String> chatIds;
 
+    @Value("${app.base-url:http://localhost:3000}")
+    private String baseUrl;
+
     @Override
     public void notifyAlertLogCreated(AlertLog alertLog) {
         try {
@@ -85,6 +88,11 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
         
         if (alertLog.getAlert() != null && alertLog.getAlert().getMessage() != null) {
             message.append("\n📝 *Detalhes:* ").append(alertLog.getAlert().getMessage());
+        }
+
+        if (alertLog.getAlert() != null && alertLog.getAlert().getId() != null) {
+            String alertLink = String.format("%s/alerts/%d/details", baseUrl, alertLog.getAlert().getId());
+            message.append("\n\n🔗 [Clique aqui para visualizar o alerta](").append(alertLink).append(")");
         }
         
         return message.toString();
