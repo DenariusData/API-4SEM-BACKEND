@@ -1,5 +1,6 @@
 package data.denarius.radarius.service;
 
+import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
@@ -32,5 +33,7 @@ public interface AlertService {
     List<AlertResponseDTO> getTop5WorstByRegion(Integer regionId);
 
     List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(Integer regionId, Integer criterionId);
+
+    List<AlertLevelPerRegionDTO> getAverageLevelPerRegion();
 
 }

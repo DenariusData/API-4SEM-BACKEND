@@ -195,9 +195,14 @@ public class CongestionStatisticsService {
                     .mapToDouble(stat -> stat.getCongestionPercentage() * stat.getTotalVehicles())
                     .sum() / totalVehicles;
                 
+                String representativeRoadAddress = regionStats.stream()
+                    .max(Comparator.comparing(CongestionStatisticsDTO::getCongestionPercentage))
+                    .map(CongestionStatisticsDTO::getRoadAddress)
+                    .orElse("múltiplas localidades");
+                
                 CongestionStatisticsDTO regionalStat = CongestionStatisticsDTO.builder()
                     .regionName(regionName)
-                    .roadAddress(regionStats.size() + " roads")
+                    .roadAddress(representativeRoadAddress)
                     .totalVehicles(totalVehicles)
                     .averageSpeed(regionStats.stream()
                         .mapToDouble(s -> s.getAverageSpeed() * s.getTotalVehicles())
@@ -236,25 +241,21 @@ public class CongestionStatisticsService {
                 .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
                 .orElse(null);
             
+            String newMessage = buildAlertMessage(region, stat);
+            
             if (openAlert != null) {
-                if (openAlert.getLevel() != newLevel) {
+                boolean needsUpdate = !newMessage.equals(openAlert.getMessage()) || 
+                                    openAlert.getLevel() != newLevel;
+                
+                if (needsUpdate) {
                     openAlert.setLevel(newLevel);
+                    openAlert.setMessage(newMessage);
                     alertRepository.save(openAlert);
-                    log.debug("Updated open Alert ID {} for region '{}': level {} -> {}", 
-                        openAlert.getId(), regionName, openAlert.getLevel(), newLevel);
+                    log.debug("Updated open Alert ID {} for region '{}'", openAlert.getId(), regionName);
                 }
             } else {
-                Alert lastAlert = alertRepository
-                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
-                    .orElse(null);
-                
-                if (lastAlert == null || lastAlert.getLevel() != newLevel) {
-                    createNewAlert(region, criterion, newLevel, stat, timestamp);
-                    log.debug("Created new Alert for region '{}' with level {} (previous level: {})", 
-                        regionName, newLevel, lastAlert != null ? lastAlert.getLevel() : "none");
-                } else {
-                    log.debug("No Alert created for region '{}' - level unchanged at {}", regionName, newLevel);
-                }
+                createNewAlert(region, criterion, newLevel, newMessage, timestamp);
+                log.debug("Created new Alert for region '{}' with level {}", regionName, newLevel);
             }
         } catch (Exception e) {
             log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
@@ -265,17 +266,8 @@ public class CongestionStatisticsService {
             Region region,
             Criterion criterion,
             short level,
-            CongestionStatisticsDTO stat,
+            String message,
             LocalDateTime timestamp) {
-        
-        String message = String.format(
-            "Congestion in region %s (road: %s): %.2f%% (avg speed: %.2f km/h, limit: %.2f km/h)",
-            region.getName(),
-            stat.getRoadAddress(),
-            stat.getCongestionPercentage(),
-            stat.getAverageSpeed(),
-            stat.getSpeedLimit()
-        );
         
         Alert newAlert = Alert.builder()
             .level(level)
@@ -289,11 +281,22 @@ public class CongestionStatisticsService {
         alertRepository.save(newAlert);
     }
     
+    private String buildAlertMessage(Region region, CongestionStatisticsDTO stat) {
+        return String.format(
+            "Congestionamento em região %s (rodovia: %s): %.2f%% (velocidade média: %.2f km/h, limite: %.2f km/h)",
+            region.getName(),
+            stat.getRoadAddress(),
+            stat.getCongestionPercentage(),
+            stat.getAverageSpeed(),
+            stat.getSpeedLimit()
+        );
+    }
+    
     private short calculateAlertLevel(double congestionPercentage) {
         if (congestionPercentage <= 20) return 1;
-        if (congestionPercentage <= 40) return 2;
-        if (congestionPercentage <= 60) return 3;
-        if (congestionPercentage <= 80) return 4;
+        if (congestionPercentage <= 30) return 2;
+        if (congestionPercentage <= 40) return 3;
+        if (congestionPercentage <= 50) return 4;
         return 5;
     }
     

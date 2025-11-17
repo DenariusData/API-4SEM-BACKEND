@@ -18,6 +18,9 @@ spring:
     hibernate:
       ddl-auto: validate
 
+app:
+  base-url: http://localhost:5173
+
 cors:
   allowed-origins: http://localhost:5173,http://localhost:8080
   allowed-methods: GET,POST,PUT,PATCH,DELETE
