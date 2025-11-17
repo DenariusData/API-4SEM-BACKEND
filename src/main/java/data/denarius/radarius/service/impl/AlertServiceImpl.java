@@ -161,14 +161,20 @@ public class AlertServiceImpl implements AlertService {
         dto.setSourceType(alert.getSourceType());
         dto.setCreatedAt(alert.getCreatedAt());
         dto.setClosedAt(alert.getClosedAt());
+
         dto.setCreatedByName(alert.getCreatedBy() != null ? alert.getCreatedBy().getName() : null);
         dto.setAssignedToName(alert.getAssignedTo() != null ? alert.getAssignedTo().getName() : null);
-        dto.setCriterionName(alert.getCriterion() != null ? alert.getCriterion().getName() : null);
+
+        dto.setRegionId(alert.getRegion() != null ? alert.getRegion().getId() : null);
+        dto.setRegionName(alert.getRegion() != null ? alert.getRegion().getName() : null);
+
         dto.setCriterionId(alert.getCriterion() != null ? alert.getCriterion().getId() : null);
+        dto.setCriterionName(alert.getCriterion() != null ? alert.getCriterion().getName() : null);
         dto.setRegionName(alert.getRegion() != null ? alert.getRegion().getName() : null);
         dto.setRegionId(alert.getRegion() != null ? alert.getRegion().getId() : null);
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
         dto.setProtocolName(alert.getProtocol() != null ? alert.getProtocol().getName() : null);
+
         return dto;
     }
     
