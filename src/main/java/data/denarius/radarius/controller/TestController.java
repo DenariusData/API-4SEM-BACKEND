@@ -90,13 +90,6 @@ public class TestController {
                 "canViewPublicData", true,
                 "canManageSystem", false
             );
-            case ROLE_CIVIL -> Map.of(
-                "canManageUsers", false,
-                "canViewReports", false,
-                "canCreateAlerts", false,
-                "canViewPublicData", true,
-                "canManageSystem", false
-            );
         };
     }
 }
