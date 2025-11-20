@@ -61,6 +61,13 @@ public class ProtocolServiceImpl implements ProtocolService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ProtocolResponseDTO> findByRootCause(Integer rootCauseId) {
+        return protocolRepository.findByRootCauseId(rootCauseId).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private Protocol mapToEntity(ProtocolRequestDTO dto) {
         Protocol protocol = new Protocol();
         updateEntity(protocol, dto);
