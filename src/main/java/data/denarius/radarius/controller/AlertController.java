@@ -25,6 +25,13 @@ public class AlertController {
         return ResponseEntity.ok(alertService.create(dto));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<AlertResponseDTO>> getActiveAlertsByRegions(
+            @RequestParam List<Integer> regionIds
+    ) {
+        return ResponseEntity.ok(alertService.getActiveAlertsByRegions(regionIds));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AlertResponseDTO> update(@PathVariable Integer id, @RequestBody AlertRequestDTO dto) {
         return ResponseEntity.ok(alertService.update(id, dto));

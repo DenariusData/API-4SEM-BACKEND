@@ -36,4 +36,6 @@ public interface AlertService {
 
     List<AlertLevelPerRegionDTO> getAverageLevelPerRegion();
 
+    List<AlertResponseDTO> getActiveAlertsByRegions(List<Integer> regionIds);
+
 }
