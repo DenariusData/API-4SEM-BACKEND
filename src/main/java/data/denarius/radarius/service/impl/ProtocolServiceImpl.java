@@ -3,8 +3,10 @@ package data.denarius.radarius.service.impl;
 import data.denarius.radarius.dto.protocol.ProtocolRequestDTO;
 import data.denarius.radarius.dto.protocol.ProtocolResponseDTO;
 import data.denarius.radarius.entity.Protocol;
+import data.denarius.radarius.entity.RootCause;
 import data.denarius.radarius.repository.PersonRepository;
 import data.denarius.radarius.repository.ProtocolRepository;
+import data.denarius.radarius.repository.RootCauseRepository;
 import data.denarius.radarius.service.ProtocolService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ public class ProtocolServiceImpl implements ProtocolService {
     private ProtocolRepository protocolRepository;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private RootCauseRepository rootCauseRepository;
 
     @Override
     public ProtocolResponseDTO create(ProtocolRequestDTO dto) {
@@ -59,6 +63,14 @@ public class ProtocolServiceImpl implements ProtocolService {
         return protocolRepository.findByNameContainingIgnoreCase(query).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProtocolResponseDTO findByRootCause(Integer rootCauseId) {
+        RootCause rc = rootCauseRepository.findById(rootCauseId)
+                .orElseThrow(() -> new EntityNotFoundException("Root Cause não encontrado"));
+
+        return mapToDTO(rc.getProtocol());
     }
 
     private Protocol mapToEntity(ProtocolRequestDTO dto) {

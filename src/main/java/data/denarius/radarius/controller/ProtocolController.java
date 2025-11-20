@@ -26,6 +26,11 @@ public class ProtocolController {
         return ResponseEntity.ok(protocolService.update(id, dto));
     }
 
+    @GetMapping("/root-cause/{rootCauseId}")
+    public ResponseEntity<ProtocolResponseDTO> findByRootCause(@PathVariable Integer rootCauseId) {
+        return ResponseEntity.ok(protocolService.findByRootCause(rootCauseId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProtocolResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(protocolService.findById(id));
