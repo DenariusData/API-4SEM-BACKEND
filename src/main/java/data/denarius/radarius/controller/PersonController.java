@@ -2,6 +2,7 @@ package data.denarius.radarius.controller;
 
 import data.denarius.radarius.dto.person.PersonRequestDTO;
 import data.denarius.radarius.dto.person.PersonResponseDTO;
+import data.denarius.radarius.security.annotations.RequireAdminRole;
 import data.denarius.radarius.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -9,10 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/persons")
+@RequireAdminRole
 public class PersonController {
 
     @Autowired
