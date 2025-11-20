@@ -127,6 +127,17 @@ public class AlertServiceImpl implements AlertService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<AlertResponseDTO> getActiveAlertsByRegions(List<Integer> regionIds) {
+        if (regionIds == null || regionIds.isEmpty()) {
+            throw new IllegalArgumentException("Lista de IDs de regiões não pode ser nula ou vazia");
+        }
+        return alertRepository.findActiveAlertsByRegionIds(regionIds)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
         updateEntity(alert, dto);
