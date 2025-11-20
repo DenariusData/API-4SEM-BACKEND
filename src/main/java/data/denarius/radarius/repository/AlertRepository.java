@@ -74,10 +74,26 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         @Param("excludeId") Integer excludeId,
         Pageable pageable);
 
-    List<Alert> findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(Integer regionId);
+    @Query("""
+    SELECT a
+    FROM Alert a
+    WHERE a.region.id IN :regionIds
+      AND a.closedAt IS NULL
+""")
+    List<Alert> findTop5WorstByRegionIds(
+            @Param("regionIds") List<Integer> regionIds,
+            Pageable pageable);
 
-    List<Alert> findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(
-            Integer regionId, Integer criterionId);
+    @Query("""
+        SELECT a FROM Alert a 
+        WHERE a.region.id IN :regionIds 
+        AND a.criterion.id = :criterionId 
+        AND a.closedAt IS NULL 
+    """)
+    List<Alert> findTop5WorstByRegionIdsAndCriterion(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionId") Integer criterionId,
+            Pageable pageable);
 
 }
 
