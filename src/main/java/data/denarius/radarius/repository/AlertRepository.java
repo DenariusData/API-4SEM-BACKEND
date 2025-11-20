@@ -73,4 +73,21 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         @Param("regionId") Integer regionId, 
         @Param("excludeId") Integer excludeId,
         Pageable pageable);
+
+    List<Alert> findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(Integer regionId);
+
+    List<Alert> findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(
+            Integer regionId, Integer criterionId);
+
+    @Query("""
+        SELECT new map(a.region.id as regionId, CAST(CEILING(AVG(a.level)) as java.lang.Integer) as level)
+        FROM Alert a
+        WHERE a.closedAt IS NULL
+        GROUP BY a.region.id
+    """)
+    List<java.util.Map<String, Object>> findAverageLevelPerRegion();
+
 }
+
+
+

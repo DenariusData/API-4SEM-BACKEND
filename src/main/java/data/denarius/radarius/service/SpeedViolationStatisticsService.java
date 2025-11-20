@@ -157,64 +157,62 @@ public class SpeedViolationStatisticsService {
     }
     
     private void processAlertForRegion(
-            SpeedViolationStatisticsDTO stat,
-            Criterion criterion,
-            LocalDateTime timestamp) {
-        
-        try {
-            String regionName = stat.getRegionName();
-            double violationRate = stat.getViolationRate();
-            short newLevel = calculateAlertLevel(violationRate);
-            
-            Region region = findRegionByName(regionName);
-            if (region == null) {
-                log.warn("  - Region '{}' not found in database", regionName);
-                return;
-            }
-            
-            Alert openAlert = alertRepository
-                .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
-                .orElse(null);
-            
-            if (openAlert != null) {
-                if (openAlert.getLevel() != newLevel) {
-                    openAlert.setLevel(newLevel);
-                    alertRepository.save(openAlert);
-                    log.debug("Updated open Alert ID {} for region '{}': level {} -> {}", 
-                        openAlert.getId(), regionName, openAlert.getLevel(), newLevel);
-                }
-            } else {
-                Alert lastAlert = alertRepository
-                    .findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(criterion.getId(), region.getId())
-                    .orElse(null);
-                
-                if (lastAlert == null || lastAlert.getLevel() != newLevel) {
-                    createNewAlert(region, criterion, newLevel, stat, timestamp);
-                    log.debug("Created new Alert for region '{}' with level {} (previous level: {})", 
-                        regionName, newLevel, lastAlert != null ? lastAlert.getLevel() : "none");
-                } else {
-                    log.debug("No Alert created for region '{}' - level unchanged at {}", regionName, newLevel);
-                }
-            }
+          SpeedViolationStatisticsDTO stat,
+          Criterion criterion,
+          LocalDateTime timestamp) {
+      
+      try {
+          String regionName = stat.getRegionName();
+          double violationRate = stat.getViolationRate();
+          short newLevel = calculateAlertLevel(violationRate);
+          
+          Region region = findRegionByName(regionName);
+          if (region == null) {
+              log.warn("  - Region '{}' not found in database", regionName);
+              return;
+          }
+          
+          Alert openAlert = alertRepository
+              .findTopByCriterionAndRegionAndClosedAtIsNullOrderByCreatedAtDesc(criterion, region)
+              .orElse(null);
+          
+          String newMessage = buildAlertMessage(region, stat);
+          
+          if (openAlert != null) {
+              boolean needsUpdate = !newMessage.equals(openAlert.getMessage()) || 
+                                  openAlert.getLevel() != newLevel;
+              
+              if (needsUpdate) {
+                  openAlert.setLevel(newLevel);
+                  openAlert.setMessage(newMessage);
+                  alertRepository.save(openAlert);
+                  log.debug("Updated open Alert ID {} for region '{}'", openAlert.getId(), regionName);
+              }
+          } else {
+              createNewAlert(region, criterion, newLevel, newMessage, timestamp);
+              log.debug("Created new Alert for region '{}' with level {}", regionName, newLevel);
+          }
         } catch (Exception e) {
             log.error("Error processing alert for region {}: {}", stat.getRegionName(), e.getMessage(), e);
         }
+    }
+
+    private String buildAlertMessage(Region region, SpeedViolationStatisticsDTO stat) {
+        return String.format(
+            "Infração de velocidade em região %s: %.2f%% (%d de %d veículos excedendo o limite em 10%% ou mais)",
+            region.getName(),
+            stat.getViolationRate() * 100,
+            stat.getViolatingVehicles(),
+            stat.getTotalVehicles()
+        );
     }
     
     private void createNewAlert(
             Region region,
             Criterion criterion,
             short level,
-            SpeedViolationStatisticsDTO stat,
+            String message,
             LocalDateTime timestamp) {
-        
-        String message = String.format(
-            "Speed violation rate in region %s: %.2f%% (%d of %d vehicles exceeding limit by 10%% or more)",
-            region.getName(),
-            stat.getViolationRate() * 100,
-            stat.getViolatingVehicles(),
-            stat.getTotalVehicles()
-        );
         
         Alert newAlert = Alert.builder()
             .level(level)
@@ -232,9 +230,9 @@ public class SpeedViolationStatisticsService {
         double percentage = violationRate * 100;
         
         if (percentage <= 0.1) return 1;
-        if (percentage <= 0.5) return 2;
-        if (percentage <= 1.0) return 3;
-        if (percentage <= 5.0) return 4;
+        if (percentage <= 0.3) return 2;
+        if (percentage <= 0.5) return 3;
+        if (percentage <= 1.0) return 4;
         return 5;
     }
     
