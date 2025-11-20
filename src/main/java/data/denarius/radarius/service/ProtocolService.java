@@ -12,5 +12,5 @@ public interface ProtocolService {
     ProtocolResponseDTO findById(Integer id);
     List<ProtocolResponseDTO> findAll();
     List<ProtocolResponseDTO> search(String query);
-    List<ProtocolResponseDTO> findByRootCause(Integer rootCauseId);
+    ProtocolResponseDTO findByRootCause(Integer rootCauseId);
 }
