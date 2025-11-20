@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -100,16 +101,20 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<AlertResponseDTO> getTop5WorstByRegion(Integer regionId) {
-        return alertRepository.findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(regionId)
+    public List<AlertResponseDTO> getTop5WorstByRegion(List<Integer> regionIds) {
+        Pageable pageable = PageRequest.of(0, 5,
+                Sort.by("level").descending().and(Sort.by("createdAt").descending()));
+        return alertRepository.findTop5WorstByRegionIds(regionIds,pageable)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(Integer regionId, Integer criterionId) {
-        return alertRepository.findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(regionId, criterionId)
+    public List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(List <Integer> regionIds, Integer criterionId) {
+        Pageable pageable = PageRequest.of(0, 5,
+                Sort.by("level").descending().and(Sort.by("createdAt").descending()));
+        return alertRepository.findTop5WorstByRegionIdsAndCriterion(regionIds, criterionId,pageable)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
