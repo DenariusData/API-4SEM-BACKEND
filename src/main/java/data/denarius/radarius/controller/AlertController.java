@@ -4,6 +4,7 @@ import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
+import data.denarius.radarius.dto.alertlog.AlertLogResponseDTO;
 import data.denarius.radarius.security.annotations.RequireAgenteOrGestorRole;
 import data.denarius.radarius.security.annotations.RequireGestorRole;
 import data.denarius.radarius.service.AlertService;
@@ -99,6 +100,37 @@ public class AlertController {
     @GetMapping("/per-region")
     public ResponseEntity<List<AlertLevelPerRegionDTO>> getAverageLevelPerRegion() {
         return ResponseEntity.ok(alertService.getAverageLevelPerRegion());
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<Page<AlertResponseDTO>> getHistory(
+            @RequestParam(required = false) List<Integer> regionIds,
+            @RequestParam(required = false) List<Integer> criterionIds,
+            @RequestParam(required = false) List<Short> levels,
+            @RequestParam(required = false) Boolean isOpen,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        LocalDateTime start = startDate != null ? LocalDateTime.parse(startDate) : null;
+        LocalDateTime end = endDate != null ? LocalDateTime.parse(endDate) : null;
+
+        return ResponseEntity.ok(alertService.getAlertHistory(
+                regionIds,
+                criterionIds,
+                levels,
+                isOpen,
+                start,
+                end,
+                page,
+                size
+        ));
+    }
+
+    @GetMapping("/{alertId}/logs")
+    public ResponseEntity<List<AlertLogResponseDTO>> getAlertLogs(@PathVariable Integer alertId) {
+        return ResponseEntity.ok(alertService.getAlertLogs(alertId));
     }
 
 }
