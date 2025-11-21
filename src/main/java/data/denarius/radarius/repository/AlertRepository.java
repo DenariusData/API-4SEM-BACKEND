@@ -120,6 +120,29 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     """)
     List<java.util.Map<String, Object>> findAverageLevelPerRegion();
 
+    @Query("""
+    SELECT DISTINCT a
+    FROM Alert a
+    WHERE (:regionIds IS NULL OR a.region.id IN :regionIds)
+    AND (:criterionIds IS NULL OR a.criterion.id IN :criterionIds)
+    AND (:levels IS NULL OR a.level IN :levels)
+    AND (:startDate IS NULL OR a.createdAt >= :startDate)
+    AND (:endDate IS NULL OR a.createdAt <= :endDate)
+    AND (:isOpen IS NULL OR 
+         (CASE WHEN :isOpen = true THEN a.closedAt IS NULL 
+               ELSE a.closedAt IS NOT NULL END))
+    ORDER BY a.createdAt DESC
+""")
+    Page<Alert> findHistoryWithFilters(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionIds") List<Integer> criterionIds,
+            @Param("levels") List<Short> levels,
+            @Param("isOpen") Boolean isOpen,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
 }
 
 
