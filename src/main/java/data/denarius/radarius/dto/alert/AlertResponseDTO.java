@@ -32,4 +32,7 @@ public class AlertResponseDTO {
 
     private String rootCauseName;
     private String protocolName;
+
+    private Boolean isOpen;
+    private String status;
 }

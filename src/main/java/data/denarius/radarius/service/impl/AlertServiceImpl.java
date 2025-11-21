@@ -4,6 +4,7 @@ import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
+import data.denarius.radarius.dto.alertlog.AlertLogResponseDTO;
 import data.denarius.radarius.entity.*;
 import data.denarius.radarius.repository.*;
 import data.denarius.radarius.service.AlertService;
@@ -138,6 +139,62 @@ public class AlertServiceImpl implements AlertService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Page<AlertResponseDTO> getAlertHistory(
+            List<Integer> regionIds,
+            List<Integer> criterionIds,
+            List<Short> levels,
+            Boolean isOpen,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        List<Integer> regionIdsParam = (regionIds != null && !regionIds.isEmpty()) ? regionIds : null;
+        List<Integer> criterionIdsParam = (criterionIds != null && !criterionIds.isEmpty()) ? criterionIds : null;
+        List<Short> levelsParam = (levels != null && !levels.isEmpty()) ? levels : null;
+
+        Page<Alert> alerts = alertRepository.findHistoryWithFilters(
+                regionIdsParam,
+                criterionIdsParam,
+                levelsParam,
+                isOpen,
+                startDate,
+                endDate,
+                pageable
+        );
+
+        return alerts.map(this::mapToDTO);
+    }
+
+    @Override
+    public List<AlertLogResponseDTO> getAlertLogs(Integer alertId) {
+        alertRepository.findById(alertId)
+                .orElseThrow(() -> new EntityNotFoundException("Alerta não encontrado com ID: " + alertId));
+
+        List<AlertLog> logs = alertLogRepository.findByAlertIdOrderByCreatedAtAsc(alertId);
+
+        return logs.stream()
+                .map(this::mapAlertLogToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private AlertLogResponseDTO mapAlertLogToDTO(AlertLog log) {
+        AlertLogResponseDTO dto = new AlertLogResponseDTO();
+        dto.setId(log.getId());
+        dto.setCreatedAt(log.getCreatedAt());
+        dto.setPreviousLevel(log.getPreviousLevel());
+        dto.setNewLevel(log.getNewLevel());
+        dto.setClosedAt(log.getClosedAt());
+        dto.setAlertMessage(log.getAlert() != null ? log.getAlert().getMessage() : null);
+        dto.setRegionName(log.getRegion() != null ? log.getRegion().getName() : null);
+        dto.setAlertId(log.getAlert() != null ? log.getAlert().getId() : null);
+        dto.setCriterionName(log.getCriterion() != null ? log.getCriterion().getName() : null);
+        return dto;
+    }
+
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
         updateEntity(alert, dto);
@@ -190,6 +247,10 @@ public class AlertServiceImpl implements AlertService {
         dto.setRegionId(alert.getRegion() != null ? alert.getRegion().getId() : null);
         dto.setRootCauseName(alert.getRootCause() != null ? alert.getRootCause().getName() : null);
         dto.setProtocolName(alert.getProtocol() != null ? alert.getProtocol().getName() : null);
+
+        boolean isOpen = alert.getClosedAt() == null;
+        dto.setIsOpen(isOpen);
+        dto.setStatus(isOpen ? "ABERTO" : "FECHADO");
 
         return dto;
     }
