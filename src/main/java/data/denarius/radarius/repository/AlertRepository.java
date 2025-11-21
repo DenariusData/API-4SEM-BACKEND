@@ -128,9 +128,7 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     AND (:levels IS NULL OR a.level IN :levels)
     AND (:startDate IS NULL OR a.createdAt >= :startDate)
     AND (:endDate IS NULL OR a.createdAt <= :endDate)
-    AND (:isOpen IS NULL OR 
-         (CASE WHEN :isOpen = true THEN a.closedAt IS NULL 
-               ELSE a.closedAt IS NOT NULL END))
+    AND (:isOpen IS NULL OR (:isOpen = true AND a.closedAt IS NULL) OR (:isOpen = false AND a.closedAt IS NOT NULL))
     ORDER BY a.createdAt DESC
 """)
     Page<Alert> findHistoryWithFilters(
@@ -144,6 +142,3 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     );
 
 }
-
-
-
