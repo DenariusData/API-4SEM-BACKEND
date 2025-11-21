@@ -10,6 +10,25 @@ public class AlertLogResponseDTO {
     private LocalDateTime closedAt;
     private String alertMessage;
     private String regionName;
+    private Integer alertId;
+
+    public Integer getAlertId() {
+        return alertId;
+    }
+
+    public void setAlertId(Integer alertId) {
+        this.alertId = alertId;
+    }
+
+    public String getCriterionName() {
+        return criterionName;
+    }
+
+    public void setCriterionName(String criterionName) {
+        this.criterionName = criterionName;
+    }
+
+    private String criterionName;
 
     // Getters e Setters
     public Integer getId() { return id; }
