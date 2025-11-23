@@ -18,6 +18,10 @@ spring:
     hibernate:
       ddl-auto: validate
 
+springdoc:
+  swagger-ui:
+    doc-expansion: full
+
 app:
   base-url: http://localhost:5173
 
