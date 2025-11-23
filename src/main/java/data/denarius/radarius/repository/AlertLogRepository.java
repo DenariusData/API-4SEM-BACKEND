@@ -32,4 +32,6 @@ public interface AlertLogRepository extends JpaRepository<AlertLog, Integer> {
         ORDER BY al.createdAt DESC
     """)
     List<AlertLog> findByRegionIdsOrderByCreatedAtDesc(@Param("regionIds") List<Integer> regionIds, Pageable pageable);
+
+    List<AlertLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
