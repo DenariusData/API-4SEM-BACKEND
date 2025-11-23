@@ -75,51 +75,26 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public List<AlertLogRecentResponseDTO> getLast10AlertLogs(Integer regionId) {
         List<AlertLog> alertLogs;
-        
+        Pageable pageable = PageRequest.of(0, 10);
+
         if (regionId == null) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Pageable pageable = PageRequest.of(0, 10);
 
-            if (authentication == null || authentication.getPrincipal() == null) {
-                alertLogs = List.of();
+            List<Integer> userRegionIds = getUserRegionIds();
+
+            if (userRegionIds.isEmpty()) {
+
+                alertLogs = alertLogRepository.findAllByOrderByCreatedAtDesc(pageable);
             } else {
-                Object principal = authentication.getPrincipal();
-                Integer userId = null;
-                try {
-                    data.denarius.radarius.security.UserPrincipal up = (data.denarius.radarius.security.UserPrincipal) principal;
-                    userId = up.getUserId();
-                } catch (ClassCastException ignored) {
-                }
 
-                if (userId == null && authentication.getName() != null) {
-                    personRepository.findByEmail(authentication.getName()).ifPresent(p -> {
-                    });
-                }
-
-                List<Integer> regionIds;
-                Person person;
-                if (userId != null) {
-                    person = personRepository.findById(userId).orElse(null);
-                } else {
-                    person = authentication.getName() != null
-                            ? personRepository.findByEmail(authentication.getName()).orElse(null)
-                            : null;
-                }
-                regionIds = person != null && person.getRegions() != null
-                        ? person.getRegions().stream().map(Region::getId).collect(Collectors.toList())
-                        : List.of();
-
-                if (regionIds.isEmpty()) {
-                    alertLogs = List.of();
-                } else {
-                    alertLogs = alertLogRepository.findByRegionIdsOrderByCreatedAtDesc(regionIds, pageable);
-                }
+                alertLogs = alertLogRepository.findByRegionIdsOrderByCreatedAtDesc(userRegionIds, pageable);
             }
         } else {
-            Pageable pageable = PageRequest.of(0, 10);
+            if (!hasAccessToRegion(regionId)) {
+                return List.of();
+            }
             alertLogs = alertLogRepository.findByRegionIdOrderByCreatedAtDesc(regionId, pageable);
         }
-        
+
         return alertLogs.stream()
                 .map(this::mapAlertLogToRecentDTO)
                 .collect(Collectors.toList());
@@ -141,19 +116,28 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public List<AlertResponseDTO> getTop5WorstByRegion(List<Integer> regionIds) {
+        List<Integer> authorizedRegionIds = filterAuthorizedRegions(regionIds);
+        if (authorizedRegionIds.isEmpty()) {
+            return List.of();
+        }
+
         Pageable pageable = PageRequest.of(0, 5,
                 Sort.by("level").descending().and(Sort.by("createdAt").descending()));
-        return alertRepository.findTop5WorstByRegionIds(regionIds,pageable)
+        return alertRepository.findTop5WorstByRegionIds(authorizedRegionIds, pageable)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(List <Integer> regionIds, Integer criterionId) {
+    public List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(List<Integer> regionIds, Integer criterionId) {
+        List<Integer> authorizedRegionIds = filterAuthorizedRegions(regionIds);
+        if (authorizedRegionIds.isEmpty()) {
+            return List.of();
+        }
         Pageable pageable = PageRequest.of(0, 5,
                 Sort.by("level").descending().and(Sort.by("createdAt").descending()));
-        return alertRepository.findTop5WorstByRegionIdsAndCriterion(regionIds, criterionId,pageable)
+        return alertRepository.findTop5WorstByRegionIdsAndCriterion(authorizedRegionIds, criterionId, pageable)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -161,17 +145,30 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public List<AlertLevelPerRegionDTO> getAverageLevelPerRegion() {
-        return alertRepository.findAverageLevelPerRegion().stream()
+        List<Integer> userRegionIds = getUserRegionIds();
+
+        List<AlertLevelPerRegionDTO> allAverages = alertRepository.findAverageLevelPerRegion().stream()
                 .map(this::mapToAlertLevelPerRegionDTO)
+                .collect(Collectors.toList());
+
+        if (userRegionIds.isEmpty()) {
+            return allAverages;
+        }
+        return allAverages.stream()
+                .filter(dto -> userRegionIds.contains(dto.getRegionId()))
                 .collect(Collectors.toList());
     }
 
+
+
     @Override
     public List<AlertResponseDTO> getActiveAlertsByRegions(List<Integer> regionIds) {
-        if (regionIds == null || regionIds.isEmpty()) {
-            throw new IllegalArgumentException("Lista de IDs de regiões não pode ser nula ou vazia");
+        List<Integer> authorizedRegionIds = filterAuthorizedRegions(regionIds);
+        if (authorizedRegionIds.isEmpty()) {
+            return List.of();
         }
-        return alertRepository.findActiveAlertsByRegionIds(regionIds)
+
+        return alertRepository.findActiveAlertsByRegionIds(authorizedRegionIds)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -217,6 +214,69 @@ public class AlertServiceImpl implements AlertService {
         return logs.stream()
                 .map(this::mapAlertLogToDTO)
                 .collect(Collectors.toList());
+    }
+
+    private List<Integer> getUserRegionIds() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return List.of();
+        }
+
+        Object principal = authentication.getPrincipal();
+        Integer userId = null;
+
+        try {
+            data.denarius.radarius.security.UserPrincipal up =
+                    (data.denarius.radarius.security.UserPrincipal) principal;
+            userId = up.getUserId();
+        } catch (ClassCastException ignored) {
+
+        }
+
+        Person person = null;
+        if (userId != null) {
+            person = personRepository.findById(userId).orElse(null);
+        } else if (authentication.getName() != null) {
+            person = personRepository.findByEmail(authentication.getName()).orElse(null);
+        }
+
+        if (person != null && person.getRegions() != null && !person.getRegions().isEmpty()) {
+            return person.getRegions().stream()
+                    .map(Region::getId)
+                    .collect(Collectors.toList());
+        }
+
+        return List.of();
+    }
+
+    private List<Integer> filterAuthorizedRegions(List<Integer> requestedRegionIds) {
+
+        if (requestedRegionIds == null || requestedRegionIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> userRegionIds = getUserRegionIds();
+
+        if (userRegionIds.isEmpty()) {
+            return requestedRegionIds;
+        }
+
+        return requestedRegionIds.stream()
+                .filter(userRegionIds::contains)
+                .collect(Collectors.toList());
+    }
+
+    private boolean hasAccessToRegion(Integer regionId) {
+
+        if (regionId == null) {
+            return true;
+        }
+
+        List<Integer> userRegionIds = getUserRegionIds();
+        if (userRegionIds.isEmpty()) {
+            return true;
+        }
+        return userRegionIds.contains(regionId);
     }
 
     private AlertLogResponseDTO mapAlertLogToDTO(AlertLog log) {
