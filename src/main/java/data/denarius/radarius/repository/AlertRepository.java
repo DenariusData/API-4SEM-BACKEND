@@ -61,6 +61,23 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.region.id = :regionId")
     List<Alert> findActiveAlertsByRegionId(@Param("regionId") Integer regionId);
     
+    @Query("""
+        SELECT a FROM Alert a 
+        WHERE a.closedAt IS NULL AND a.region.id IN :regionIds
+        ORDER BY 
+            CASE 
+                WHEN a.region.name = 'Zona Sul' THEN 1
+                WHEN a.region.name = 'Zona Norte' THEN 2
+                WHEN a.region.name = 'Zona Leste' THEN 3
+                WHEN a.region.name = 'Zona Oeste' THEN 4
+                WHEN a.region.name = 'Centro' THEN 5
+                ELSE 6
+            END,
+            a.level DESC,
+            a.createdAt DESC
+    """)
+    List<Alert> findActiveAlertsByRegionIds(@Param("regionIds") List<Integer> regionIds);
+    
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.level = :level")
     List<Alert> findActiveAlertsByLevel(@Param("level") Integer level);
     
@@ -74,10 +91,26 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         @Param("excludeId") Integer excludeId,
         Pageable pageable);
 
-    List<Alert> findTop5ByRegionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(Integer regionId);
+    @Query("""
+    SELECT a
+    FROM Alert a
+    WHERE a.region.id IN :regionIds
+      AND a.closedAt IS NULL
+""")
+    List<Alert> findTop5WorstByRegionIds(
+            @Param("regionIds") List<Integer> regionIds,
+            Pageable pageable);
 
-    List<Alert> findTop5ByRegionIdAndCriterionIdAndClosedAtIsNullOrderByLevelDescCreatedAtDesc(
-            Integer regionId, Integer criterionId);
+    @Query("""
+        SELECT a FROM Alert a 
+        WHERE a.region.id IN :regionIds 
+        AND a.criterion.id = :criterionId 
+        AND a.closedAt IS NULL 
+    """)
+    List<Alert> findTop5WorstByRegionIdsAndCriterion(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionId") Integer criterionId,
+            Pageable pageable);
 
     @Query("""
         SELECT new map(a.region.id as regionId, CAST(CEILING(AVG(a.level)) as java.lang.Integer) as level)
@@ -87,7 +120,25 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     """)
     List<java.util.Map<String, Object>> findAverageLevelPerRegion();
 
+    @Query("""
+    SELECT DISTINCT a
+    FROM Alert a
+    WHERE (:regionIds IS NULL OR a.region.id IN :regionIds)
+    AND (:criterionIds IS NULL OR a.criterion.id IN :criterionIds)
+    AND (:levels IS NULL OR a.level IN :levels)
+    AND (:startDate IS NULL OR a.createdAt >= :startDate)
+    AND (:endDate IS NULL OR a.createdAt <= :endDate)
+    AND (:isOpen IS NULL OR (:isOpen = true AND a.closedAt IS NULL) OR (:isOpen = false AND a.closedAt IS NOT NULL))
+    ORDER BY a.createdAt DESC
+""")
+    Page<Alert> findHistoryWithFilters(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionIds") List<Integer> criterionIds,
+            @Param("levels") List<Short> levels,
+            @Param("isOpen") Boolean isOpen,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
 }
-
-
-

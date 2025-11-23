@@ -17,4 +17,5 @@ public class RootCauseResponseDTO {
     private String description;
     private LocalDateTime createdAt;
     private String personName;
+    private String protocolName;
 }

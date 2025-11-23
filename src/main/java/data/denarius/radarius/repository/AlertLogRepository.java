@@ -20,4 +20,6 @@ public interface AlertLogRepository extends JpaRepository<AlertLog, Integer> {
     List<AlertLog> findTop10ByOrderByCreatedAtDesc();
     
     List<AlertLog> findByRegionIdOrderByCreatedAtDesc(Integer regionId, Pageable pageable);
+
+    List<AlertLog> findByAlertIdOrderByCreatedAtAsc(Integer alertId);
 }

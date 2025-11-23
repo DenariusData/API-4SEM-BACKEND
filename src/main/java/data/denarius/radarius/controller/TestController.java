@@ -76,24 +76,17 @@ public class TestController {
         }
         
         return switch (role) {
-            case ROLE_GESTOR -> Map.of(
-                "canManageUsers", true,
-                "canViewReports", true,
-                "canCreateAlerts", true,
-                "canViewPublicData", true,
-                "canManageSystem", true
+            case ROLE_ADMIN, ROLE_GESTOR -> Map.of(
+                    "canManageUsers", true,
+                    "canViewReports", true,
+                    "canCreateAlerts", true,
+                    "canViewPublicData", true,
+                    "canManageSystem", true
             );
             case ROLE_AGENTE -> Map.of(
                 "canManageUsers", false,
                 "canViewReports", true,
                 "canCreateAlerts", true,
-                "canViewPublicData", true,
-                "canManageSystem", false
-            );
-            case ROLE_CIVIL -> Map.of(
-                "canManageUsers", false,
-                "canViewReports", false,
-                "canCreateAlerts", false,
                 "canViewPublicData", true,
                 "canManageSystem", false
             );

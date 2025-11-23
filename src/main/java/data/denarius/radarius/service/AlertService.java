@@ -4,6 +4,7 @@ import data.denarius.radarius.dto.alert.AlertLevelPerRegionDTO;
 import data.denarius.radarius.dto.alert.AlertRequestDTO;
 import data.denarius.radarius.dto.alert.AlertResponseDTO;
 import data.denarius.radarius.dto.alertlog.AlertLogRecentResponseDTO;
+import data.denarius.radarius.dto.alertlog.AlertLogResponseDTO;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
@@ -30,10 +31,25 @@ public interface AlertService {
             int size
     );
 
-    List<AlertResponseDTO> getTop5WorstByRegion(Integer regionId);
+    List<AlertResponseDTO> getTop5WorstByRegion(List<Integer> regionIds);
 
-    List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(Integer regionId, Integer criterionId);
+    List<AlertResponseDTO> getTop5WorstByRegionAndCriterion(List<Integer> regionIds, Integer criterionId);
 
     List<AlertLevelPerRegionDTO> getAverageLevelPerRegion();
+
+    List<AlertResponseDTO> getActiveAlertsByRegions(List<Integer> regionIds);
+
+    Page<AlertResponseDTO> getAlertHistory(
+            List<Integer> regionIds,
+            List<Integer> criterionIds,
+            List<Short> levels,
+            Boolean isOpen,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            int page,
+            int size
+    );
+
+    List<AlertLogResponseDTO> getAlertLogs(Integer alertId);
 
 }
