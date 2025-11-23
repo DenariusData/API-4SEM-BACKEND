@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -75,7 +77,44 @@ public class AlertServiceImpl implements AlertService {
         List<AlertLog> alertLogs;
         
         if (regionId == null) {
-            alertLogs = alertLogRepository.findTop10ByOrderByCreatedAtDesc();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Pageable pageable = PageRequest.of(0, 10);
+
+            if (authentication == null || authentication.getPrincipal() == null) {
+                alertLogs = List.of();
+            } else {
+                Object principal = authentication.getPrincipal();
+                Integer userId = null;
+                try {
+                    data.denarius.radarius.security.UserPrincipal up = (data.denarius.radarius.security.UserPrincipal) principal;
+                    userId = up.getUserId();
+                } catch (ClassCastException ignored) {
+                }
+
+                if (userId == null && authentication.getName() != null) {
+                    personRepository.findByEmail(authentication.getName()).ifPresent(p -> {
+                    });
+                }
+
+                List<Integer> regionIds;
+                Person person;
+                if (userId != null) {
+                    person = personRepository.findById(userId).orElse(null);
+                } else {
+                    person = authentication.getName() != null
+                            ? personRepository.findByEmail(authentication.getName()).orElse(null)
+                            : null;
+                }
+                regionIds = person != null && person.getRegions() != null
+                        ? person.getRegions().stream().map(Region::getId).collect(Collectors.toList())
+                        : List.of();
+
+                if (regionIds.isEmpty()) {
+                    alertLogs = List.of();
+                } else {
+                    alertLogs = alertLogRepository.findByRegionIdsOrderByCreatedAtDesc(regionIds, pageable);
+                }
+            }
         } else {
             Pageable pageable = PageRequest.of(0, 10);
             alertLogs = alertLogRepository.findByRegionIdOrderByCreatedAtDesc(regionId, pageable);
