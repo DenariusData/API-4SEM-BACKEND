@@ -52,4 +52,6 @@ public interface AlertService {
 
     List<AlertLogResponseDTO> getAlertLogs(Integer alertId);
 
+    AlertResponseDTO finalizeAlert(Integer id, String conclusion);
+
 }

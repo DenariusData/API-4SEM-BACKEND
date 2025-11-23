@@ -16,6 +16,7 @@ import java.util.Collections;
 public class UserPrincipal implements UserDetails {
     private final Integer userId;
     private final String email;
+    private final String name;
     private final RoleEnum role;
 
     @JsonIgnore

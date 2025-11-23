@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -195,6 +194,24 @@ public class AlertServiceImpl implements AlertService {
         return dto;
     }
 
+    @Override
+    public AlertResponseDTO finalizeAlert(Integer id, String conclusion) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Alerta não encontrado"));
+
+        if (alert.getClosedAt() != null) {
+            throw new IllegalStateException("Alerta já está finalizado");
+        }
+
+        alert.setClosedAt(LocalDateTime.now());
+        if (conclusion != null && !conclusion.isBlank()) {
+            alert.setConclusion(conclusion);
+        }
+
+        Alert saved = alertRepository.save(alert);
+        return mapToDTO(saved);
+    }
+
     private Alert mapToEntity(AlertRequestDTO dto) {
         Alert alert = new Alert();
         updateEntity(alert, dto);
@@ -228,7 +245,7 @@ public class AlertServiceImpl implements AlertService {
     private AlertResponseDTO mapToDTO(Alert alert) {
         AlertResponseDTO dto = new AlertResponseDTO();
         dto.setId(alert.getId());
-        dto.setLevel(alert.getLevel().shortValue());
+        dto.setLevel(alert.getLevel());
         dto.setMessage(alert.getMessage());
         dto.setConclusion(alert.getConclusion());
         dto.setSourceType(alert.getSourceType());

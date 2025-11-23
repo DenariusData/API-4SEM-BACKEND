@@ -30,6 +30,11 @@ public class AuthServiceImpl implements AuthService {
             userPrincipal.getRole().toString()
         );
 
-        return new LoginResponseDTO(token, userPrincipal.getRole());
+        return new LoginResponseDTO(
+                token,
+                userPrincipal.getRole(),
+                userPrincipal.getName(),
+                userPrincipal.getEmail()
+        );
     }
 }

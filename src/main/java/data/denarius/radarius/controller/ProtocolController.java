@@ -30,6 +30,7 @@ public class ProtocolController {
     }
 
     @GetMapping("/root-cause/{rootCauseId}")
+    @RequireAgenteOrGestorRole
     public ResponseEntity<ProtocolResponseDTO> findByRootCause(@PathVariable Integer rootCauseId) {
         return ResponseEntity.ok(protocolService.findByRootCause(rootCauseId));
     }

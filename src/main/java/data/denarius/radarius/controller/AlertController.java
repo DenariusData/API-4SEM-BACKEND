@@ -133,4 +133,13 @@ public class AlertController {
         return ResponseEntity.ok(alertService.getAlertLogs(alertId));
     }
 
+    @PostMapping("/{id}/finalize")
+    @RequireAgenteOrGestorRole
+    public ResponseEntity<AlertResponseDTO> finalizeAlert(
+            @PathVariable Integer id,
+            @RequestParam(required = false) String conclusion
+    ) {
+        return ResponseEntity.ok(alertService.finalizeAlert(id, conclusion));
+    }
+
 }
