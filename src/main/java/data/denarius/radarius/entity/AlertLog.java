@@ -38,11 +38,11 @@ public class AlertLog {
     @JoinColumn(name = "ale_id", nullable = false)
     private Alert alert;
 
-    @ManyToOne
-    @JoinColumn(name = "reg_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "reg_id", nullable = false)
     private Region region;
 
-    @ManyToOne
-    @JoinColumn(name = "cri_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "cri_id", nullable = false)
     private Criterion criterion;
 }

@@ -5,9 +5,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
+@Table(name = "person")
+
 @Getter
 @Setter
 @Builder
@@ -37,4 +40,12 @@ public class Person {
 
     @Column(name = "per_created_at")
     private LocalDateTime createdAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "person_region",
+            joinColumns = @JoinColumn(name = "per_id"),
+            inverseJoinColumns = @JoinColumn(name = "reg_id")
+    )
+    private List<Region> regions = new ArrayList<>();
 }

@@ -17,11 +17,14 @@ public class CustomUserDetailService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Person person = personService.findByEmail(email).orElseThrow(() ->
                 new UsernameNotFoundException("User not found with email: " + email));
+
         return UserPrincipal
                 .builder()
                 .userId(person.getId())
                 .email(person.getEmail())
+                .name(person.getName())
                 .password(person.getPassword())
+                .role(person.getRole())
                 .build();
     }
 }

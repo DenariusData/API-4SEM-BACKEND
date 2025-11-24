@@ -85,6 +85,7 @@ public class RootCauseServiceImpl implements RootCauseService {
         dto.setDescription(rootCause.getDescription());
         dto.setCreatedAt(rootCause.getCreatedAt());
         dto.setPersonName(rootCause.getPerson() != null ? rootCause.getPerson().getName() : null);
+        dto.setProtocolName(rootCause.getProtocol() != null ? rootCause.getProtocol().getName() : null);
         return dto;
     }
 }

@@ -21,7 +21,7 @@ public class AlertRequestDTO {
     private LocalDateTime closedAt;
     private Integer createdById;
     private Integer assignedToId;
-    private Integer cameraId;
+    private Integer regionId;
     private Integer criterionId;
     private Integer rootCauseId;
     private Integer protocolId;

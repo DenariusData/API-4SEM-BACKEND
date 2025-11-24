@@ -20,10 +20,19 @@ public class AlertResponseDTO {
     private SourceTypeEnum sourceType;
     private LocalDateTime createdAt;
     private LocalDateTime closedAt;
+
     private String createdByName;
     private String assignedToName;
-    private String cameraName;
+
     private String criterionName;
+    private Integer criterionId;
+
+    private String regionName;
+    private Integer regionId;
+
     private String rootCauseName;
     private String protocolName;
+
+    private Boolean isOpen;
+    private String status;
 }

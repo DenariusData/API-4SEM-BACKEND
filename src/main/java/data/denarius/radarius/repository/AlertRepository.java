@@ -32,27 +32,24 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         FROM Alert a
         LEFT JOIN a.logs al
         WHERE (:regionIds IS NULL OR al.region.id IN :regionIds)
-        AND (:cameraId IS NULL OR a.camera.id = :cameraId)
         AND (:startDate IS NULL OR a.createdAt >= :startDate)
         AND (:endDate IS NULL OR a.createdAt <= :endDate)
         ORDER BY a.createdAt DESC
     """)
     Page<Alert> findWithFilters(@Param("regionIds") List<Integer> regionIds,
-            @Param("cameraId") Integer cameraId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
     Optional<Alert> findFirstByCriterionIdAndRegionIdOrderByCreatedAtDesc(Integer criterionId, Integer regionId);
     
-    Optional<Alert> findTopBySourceTypeAndCriterionIdAndCameraIdAndRegionIdOrderByCreatedAtDesc(
-        SourceTypeEnum sourceType, Integer criterionId, Integer cameraId, Integer regionId);
+    Optional<Alert> findTopBySourceTypeAndCriterionIdAndRegionIdOrderByCreatedAtDesc(
+        SourceTypeEnum sourceType, Integer criterionId, Integer regionId);
     
-    @Query("SELECT a FROM Alert a WHERE a.sourceType = :sourceType AND a.criterion.id = :criterionId AND a.camera.id = :cameraId AND a.region.id = :regionId AND a.closedAt IS NULL ORDER BY a.createdAt DESC")
-    Optional<Alert> findActiveAlertBySourceTypeAndCriterionIdAndCameraIdAndRegionId(
+    @Query("SELECT a FROM Alert a WHERE a.sourceType = :sourceType AND a.criterion.id = :criterionId AND a.region.id = :regionId AND a.closedAt IS NULL ORDER BY a.createdAt DESC")
+    Optional<Alert> findActiveAlertBySourceTypeAndCriterionIdAndRegionId(
         @Param("sourceType") SourceTypeEnum sourceType, 
         @Param("criterionId") Integer criterionId, 
-        @Param("cameraId") Integer cameraId, 
         @Param("regionId") Integer regionId);
     
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.createdAt < :threshold")
@@ -63,6 +60,23 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
     
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.region.id = :regionId")
     List<Alert> findActiveAlertsByRegionId(@Param("regionId") Integer regionId);
+    
+    @Query("""
+        SELECT a FROM Alert a 
+        WHERE a.closedAt IS NULL AND a.region.id IN :regionIds
+        ORDER BY 
+            CASE 
+                WHEN a.region.name = 'Zona Sul' THEN 1
+                WHEN a.region.name = 'Zona Norte' THEN 2
+                WHEN a.region.name = 'Zona Leste' THEN 3
+                WHEN a.region.name = 'Zona Oeste' THEN 4
+                WHEN a.region.name = 'Centro' THEN 5
+                ELSE 6
+            END,
+            a.level DESC,
+            a.createdAt DESC
+    """)
+    List<Alert> findActiveAlertsByRegionIds(@Param("regionIds") List<Integer> regionIds);
     
     @Query("SELECT a FROM Alert a WHERE a.closedAt IS NULL AND a.level = :level")
     List<Alert> findActiveAlertsByLevel(@Param("level") Integer level);
@@ -76,4 +90,55 @@ public interface AlertRepository extends JpaRepository<Alert, Integer> {
         @Param("regionId") Integer regionId, 
         @Param("excludeId") Integer excludeId,
         Pageable pageable);
+
+    @Query("""
+    SELECT a
+    FROM Alert a
+    WHERE a.region.id IN :regionIds
+      AND a.closedAt IS NULL
+""")
+    List<Alert> findTop5WorstByRegionIds(
+            @Param("regionIds") List<Integer> regionIds,
+            Pageable pageable);
+
+    @Query("""
+        SELECT a FROM Alert a 
+        WHERE a.region.id IN :regionIds 
+        AND a.criterion.id = :criterionId 
+        AND a.closedAt IS NULL 
+    """)
+    List<Alert> findTop5WorstByRegionIdsAndCriterion(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionId") Integer criterionId,
+            Pageable pageable);
+
+    @Query("""
+        SELECT new map(a.region.id as regionId, CAST(CEILING(AVG(a.level)) as java.lang.Integer) as level)
+        FROM Alert a
+        WHERE a.closedAt IS NULL
+        GROUP BY a.region.id
+    """)
+    List<java.util.Map<String, Object>> findAverageLevelPerRegion();
+
+    @Query("""
+    SELECT DISTINCT a
+    FROM Alert a
+    WHERE (:regionIds IS NULL OR a.region.id IN :regionIds)
+    AND (:criterionIds IS NULL OR a.criterion.id IN :criterionIds)
+    AND (:levels IS NULL OR a.level IN :levels)
+    AND (:startDate IS NULL OR a.createdAt >= :startDate)
+    AND (:endDate IS NULL OR a.createdAt <= :endDate)
+    AND (:isOpen IS NULL OR (:isOpen = true AND a.closedAt IS NULL) OR (:isOpen = false AND a.closedAt IS NOT NULL))
+    ORDER BY a.createdAt DESC
+""")
+    Page<Alert> findHistoryWithFilters(
+            @Param("regionIds") List<Integer> regionIds,
+            @Param("criterionIds") List<Integer> criterionIds,
+            @Param("levels") List<Short> levels,
+            @Param("isOpen") Boolean isOpen,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
 }

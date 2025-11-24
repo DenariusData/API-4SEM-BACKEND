@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 public class AlertNotificationServiceImpl implements AlertNotificationService {
@@ -17,8 +19,11 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
     @Autowired
     private TelegramService telegramService;
 
-    @Value("${telegram.chat.id}")
-    private String chatId;
+    @Value("#{'${telegram.chat.ids}'.split(',')}")
+    private List<String> chatIds;
+
+    @Value("${app.base-url:http://localhost:5173}")
+    private String baseUrl;
 
     @Override
     public void notifyAlertLogCreated(AlertLog alertLog) {
@@ -46,9 +51,17 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
 
             String message = buildTelegramMessage(region, criterion, previousLevel, newLevel, alertLog);
 
-            telegramService.sendMessage(chatId, message);
+            for (String chatId : chatIds) {
+                if (alertLog.getAlert() != null && alertLog.getAlert().getId() != null) {
+                    String alertLink = String.format("%s/alerts/%d/details", baseUrl, alertLog.getAlert().getId());
+                    telegramService.sendMessageWithButton(chatId, message, "🔗 Visualizar Alerta", alertLink);
+                } else {
+                    telegramService.sendMessage(chatId, message);
+                }
+            }
             
-            log.info("Telegram notification sent for AlertLog ID {} - Region: {}, Criterion: {}, Level: {} -> {}",
+            log.info("Telegram notifications sent to {} recipients for AlertLog ID {} - Region: {}, Criterion: {}, Level: {} -> {}",
+                    chatIds.size(),
                     alertLog.getId(),
                     region != null ? region.getName() : "N/A",
                     criterion != null ? criterion.getName() : "N/A",
@@ -68,18 +81,18 @@ public class AlertNotificationServiceImpl implements AlertNotificationService {
         
         String emoji = getEmojiForLevel(newLevel);
         
-        message.append(emoji).append(" *ALERTA DE MUDANÇA DE NÍVEL*\n\n");
-        message.append("📍 *Região:* ").append(region != null ? region.getName() : "N/A").append("\n");
-        message.append("📊 *Critério:* ").append(criterion != null ? criterion.getName() : "N/A").append("\n");
-        message.append("⚠️ *Nível Anterior:* ").append(previousLevel != null ? previousLevel : "N/A").append("\n");
-        message.append("🔔 *Novo Nível:* ").append(newLevel != null ? newLevel : "N/A").append("\n");
+        message.append(emoji).append(" <b>ALERTA DE MUDANÇA DE NÍVEL</b>\n\n");
+        message.append("📍 <b>Região:</b> ").append(region != null ? region.getName() : "N/A").append("\n");
+        message.append("📊 <b>Critério:</b> ").append(criterion != null ? criterion.getName() : "N/A").append("\n");
+        message.append("⚠️ <b>Nível Anterior:</b> ").append(previousLevel != null ? previousLevel : "N/A").append("\n");
+        message.append("🔔 <b>Novo Nível:</b> ").append(newLevel != null ? newLevel : "N/A").append("\n");
         
         if (alertLog.getClosedAt() != null) {
-            message.append("✅ *Status:* Alerta fechado\n");
+            message.append("✅ <b>Status:</b> Alerta fechado\n");
         }
         
         if (alertLog.getAlert() != null && alertLog.getAlert().getMessage() != null) {
-            message.append("\n📝 *Detalhes:* ").append(alertLog.getAlert().getMessage());
+            message.append("\n📝 <b>Detalhes:</b> ").append(alertLog.getAlert().getMessage());
         }
         
         return message.toString();

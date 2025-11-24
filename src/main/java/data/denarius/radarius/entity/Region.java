@@ -5,9 +5,11 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
+
 @Getter
 @Setter
 @Builder
@@ -37,4 +39,7 @@ public class Region {
 
     @Column(name = "reg_radius_km", precision = 5, scale = 2)
     private BigDecimal radiusKm;
+
+    @ManyToMany(mappedBy = "regions", fetch = FetchType.LAZY)
+    private List<Person> persons = new ArrayList<>();
 }

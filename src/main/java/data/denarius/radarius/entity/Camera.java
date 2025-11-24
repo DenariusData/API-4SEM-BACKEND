@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Entity
-@Data
+
 @Getter
 @Setter
 @Builder
@@ -41,9 +41,6 @@ public class Camera {
 
     @OneToMany(mappedBy = "camera")
     private List<Reading> readings;
-
-    @OneToMany(mappedBy = "camera")
-    private List<Alert> alerts;
 
     @ManyToOne
     @JoinColumn(name = "reg_id")

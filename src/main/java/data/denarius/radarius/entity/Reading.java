@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+
 @Getter
 @Setter
 @Builder
@@ -31,9 +31,6 @@ public class Reading {
 
     @Column(name = "rea_speed")
     private BigDecimal speed;
-
-    @Column(name = "rea_plate")
-    private String plate;
 
     @ManyToOne
     @JoinColumn(name = "cam_id")

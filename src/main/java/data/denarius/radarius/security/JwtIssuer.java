@@ -13,11 +13,12 @@ import java.time.Instant;
 public class JwtIssuer {
     private final JwtProperties properties;
 
-    public String issue(Integer userId, String email) {
+    public String issue(Integer userId, String email, String role) {
         return JWT.create()
                 .withSubject(String.valueOf(userId))
                 .withExpiresAt(Instant.now().plus(Duration.ofDays(1)))
                 .withClaim("e", email)
+                .withClaim("r", role)
                 .sign(Algorithm.HMAC256(properties.getSecretKey()));
     }
 }
